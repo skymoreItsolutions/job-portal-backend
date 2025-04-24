@@ -10,11 +10,9 @@ use App\Http\Controllers\API\CandidateSkillController;
 use App\Http\Controllers\API\CandidateLanguageController;
 
 Route::prefix('v1')->group(function () {
-
     Route::apiResource('candidates', CandidateController::class);
     Route::apiResource('candidate-educations', CandidateEducationController::class);
     Route::apiResource('candidate-experiences', CandidateExperienceController::class);
     Route::apiResource('candidate-skills', CandidateSkillController::class);
     Route::apiResource('candidate-languages', CandidateLanguageController::class);
-
 });
