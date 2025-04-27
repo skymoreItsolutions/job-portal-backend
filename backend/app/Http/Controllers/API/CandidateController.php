@@ -20,7 +20,7 @@ class CandidateController extends Controller
      public function store(Request $request)
      {
          $candidate = Candidate::create($request->only([
-             'full_name', 'dob', 'gender', 'email', 'address', 'city', 'state',
+             'full_name', 'dob', 'gender', 'address', 'city', 'state',
              'prefers_night_shift', 'prefers_day_shift', 'work_from_home',
              'work_from_office', 'field_job', 'employment_type', 'resume',
              'active_user', 'last_login', 'total_jobs_applied', 'total_job_views'
