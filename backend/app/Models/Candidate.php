@@ -27,6 +27,8 @@ class Candidate extends Model
         'last_login',
         'total_jobs_applied',
         'total_job_views',
+        'otp',
+    'otp_expires_at',
     ];
 
     public function educations()
