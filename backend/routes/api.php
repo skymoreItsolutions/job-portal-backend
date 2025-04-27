@@ -8,11 +8,16 @@ use App\Http\Controllers\API\CandidateEducationController;
 use App\Http\Controllers\API\CandidateExperienceController;
 use App\Http\Controllers\API\CandidateSkillController;
 use App\Http\Controllers\API\CandidateLanguageController;
-
+use App\Http\Controllers\API\AuthController;
 Route::prefix('v1')->group(function () {
     Route::apiResource('candidates', CandidateController::class);
     Route::apiResource('candidate-educations', CandidateEducationController::class);
     Route::apiResource('candidate-experiences', CandidateExperienceController::class);
     Route::apiResource('candidate-skills', CandidateSkillController::class);
     Route::apiResource('candidate-languages', CandidateLanguageController::class);
+
+    
+    Route::post('signup', [AuthController::class, 'signup']);
+    Route::post('send-otp', [AuthController::class, 'sendOtp']);
+    Route::post('verify-otp', [AuthController::class, 'verifyOtp']);
 });
