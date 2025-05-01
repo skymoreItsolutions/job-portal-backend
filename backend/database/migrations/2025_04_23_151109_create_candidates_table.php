@@ -48,6 +48,7 @@ return new class extends Migration
             $table->string('preferred_language')->nullable();
     
             // Others
+            
             $table->string('resume')->nullable(); // for resume file path
             $table->text('skills')->nullable();
     
