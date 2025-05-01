@@ -19,7 +19,7 @@ class DatabaseSeeder extends Seeder
     $this->call([EmployerSeeder::class,
     JobPostingSeeder::class,
 
-    JobPostingApplicationSeeder::class,
+    // JobPostingApplicationSeeder::class,
    
 ]);
 

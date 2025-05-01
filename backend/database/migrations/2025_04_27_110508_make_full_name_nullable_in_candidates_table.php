@@ -1,22 +1,22 @@
 <?php
-
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::table('candidates', function (Blueprint $table) {
-            $table->string('full_name')->nullable()->change();
+            if (!Schema::hasColumn('candidates', 'number')) {
+                $table->string('number')->nullable(); // Add column if it doesn't exist
+            } else {
+                $table->string('number')->nullable()->change(); // Only modify if it exists
+            }
 
+            $table->string('full_name')->nullable()->change();
             $table->date('dob')->nullable()->change();
             $table->string('gender')->nullable()->change();
-            $table->string('number')->nullable()->change();
             $table->string('address')->nullable()->change();
             $table->string('city')->nullable()->change();
             $table->string('state')->nullable()->change();
@@ -49,19 +49,14 @@ return new class extends Migration
             $table->timestamp('updated_at')->nullable()->change();
             $table->string('otp')->nullable()->change();
             $table->string('token')->nullable();
-
             $table->timestamp('otp_expires_at')->nullable()->change();
-
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::table('candidates', function (Blueprint $table) {
-            //
+            $table->dropColumn('number'); // Optional: Drop if rolling back
         });
     }
 };
