@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Models\Candidate;
 use Illuminate\Http\Request;
 
 class CandidateEducationController extends Controller
@@ -13,6 +14,9 @@ class CandidateEducationController extends Controller
     public function index()
     {
         //
+
+
+
     }
 
     /**
@@ -34,9 +38,12 @@ class CandidateEducationController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, string $token)
     {
-        //
+    
+        Candidate::where("token",$token)->update(["full_name"=>$request["full_name"],"dob"=>$request["dob"],"gender"=>$request["gender"],"number"=>$request["number"]]);
+
+return response()->json(["success"=>true]);
     }
 
     /**

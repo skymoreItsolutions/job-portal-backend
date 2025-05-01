@@ -48,7 +48,7 @@ class AuthController extends Controller
         $candidate->otp = $otp;
         $candidate->otp_expires_at = Carbon::now()->addMinutes(10);
         $candidate->save();
-    } else {
+    } else { 
         // If candidate does not exist, create a new record
         $candidate = new Candidate();
         $candidate->email = $request->email;
@@ -62,11 +62,11 @@ class AuthController extends Controller
         Mail::to($request->email)->send(new SendOtpMail($otp));
     } catch (\Exception $e) {
         // If sending mail fails, return an error response
-        return response()->json(['message' => 'Failed to send OTP', 'error' => $e->getMessage()], 500);
+        return response()->json(["success"=>false,'message' => 'Failed to send OTP', 'error' => $e->getMessage()], 500);
     }
 
     // Return the OTP as a response
-    return response()->json(['otp' => $otp]);
+    return response()->json(["success" => true]);
 }
 
 
@@ -86,23 +86,26 @@ class AuthController extends Controller
         $candidate = Candidate::where('email', $request->email)->first();
 
         if ($candidate->otp != $request->otp) {
-            return response()->json(['message' => 'Invalid OTP'], 401);
+            return response()->json(["success"=>false,'message' => 'Invalid OTP'], 401);
         }
 
         if (Carbon::now()->gt($candidate->otp_expires_at)) {
-            return response()->json(['message' => 'OTP expired'], 401);
+            return response()->json(["success"=>false,'message' => 'OTP expired'], 401);
         }
 
         // clear otp after success login
+        $token = Str::random(60);
         $candidate->otp = null;
         $candidate->otp_expires_at = null;
         $candidate->last_login = Carbon::now();
+        $candidate->token=$token;
         $candidate->save();
 
         // Generate simple token (you can use Sanctum or Passport for real app)
-        $token = Str::random(60);
-
+        
+         
         return response()->json([
+            "success"=>true,
             'message' => 'Login successful',
             'token' => $token,
             'user' => $candidate

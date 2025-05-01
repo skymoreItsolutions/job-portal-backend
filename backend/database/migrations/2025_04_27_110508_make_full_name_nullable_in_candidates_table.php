@@ -16,6 +16,7 @@ return new class extends Migration
 
             $table->date('dob')->nullable()->change();
             $table->string('gender')->nullable()->change();
+            $table->string('number')->nullable()->change();
             $table->string('address')->nullable()->change();
             $table->string('city')->nullable()->change();
             $table->string('state')->nullable()->change();
@@ -47,6 +48,8 @@ return new class extends Migration
             $table->timestamp('created_at')->nullable()->change();
             $table->timestamp('updated_at')->nullable()->change();
             $table->string('otp')->nullable()->change();
+            $table->string('token')->nullable();
+
             $table->timestamp('otp_expires_at')->nullable()->change();
 
         });
