@@ -14,6 +14,8 @@ use App\Http\Controllers\API\CandidateSkillController;
 use App\Http\Controllers\API\CandidateLanguageController;
 use App\Http\Controllers\API\AuthController;
 
+use App\Http\Controllers\API\EmployerAuthController;
+
 Route::prefix('v1')->group(function () {
     Route::apiResource('candidates', CandidateController::class);
     Route::apiResource('candidate-educations', CandidateEducationController::class);
@@ -25,3 +27,9 @@ Route::prefix('v1')->group(function () {
     Route::post('send-otp', [AuthController::class, 'sendOtp']);
     Route::post('verify-otp', [AuthController::class, 'verifyOtp']);
 });
+
+
+Route::post('/employer/signup', [EmployerAuthController::class, 'signup']);
+Route::post('/employer/verify-otp', [EmployerAuthController::class, 'verifyOtp']);
+Route::post('/employer/login', [EmployerAuthController::class, 'login']);
+Route::middleware('auth:employer-api')->get('/employer/profile', [EmployerAuthController::class, 'profile']);
