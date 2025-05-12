@@ -26,10 +26,16 @@ Route::prefix('v1')->group(function () {
     Route::post('signup', [AuthController::class, 'signup']);
     Route::post('send-otp', [AuthController::class, 'sendOtp']);
     Route::post('verify-otp', [AuthController::class, 'verifyOtp']);
+
+
+
+Route::post('employer/signup', [EmployerAuthController::class, 'signup']);
+Route::post('employer/send-otp', [EmployerAuthController::class, 'sendOtp']);
+
+Route::post('employer/verify-otp', [EmployerAuthController::class, 'verifyOtp']);
+Route::post('employer/login', [EmployerAuthController::class, 'login']);
+Route::middleware('auth:employer-api')->get('employer/profile', [EmployerAuthController::class, 'profile']);
+
 });
 
 
-Route::post('/employer/signup', [EmployerAuthController::class, 'signup']);
-Route::post('/employer/verify-otp', [EmployerAuthController::class, 'verifyOtp']);
-Route::post('/employer/login', [EmployerAuthController::class, 'login']);
-Route::middleware('auth:employer-api')->get('/employer/profile', [EmployerAuthController::class, 'profile']);
