@@ -4,13 +4,15 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Laravel\Sanctum\HasApiTokens;
+
 class Employer extends Model
 {
-    use HasFactory;
+    use HasFactory,HasApiTokens;
 
     protected $fillable = [
         'name',
-    'gst_number',
+       'gst_number',
         'company_name',
         'company_location',
         'contact_person',

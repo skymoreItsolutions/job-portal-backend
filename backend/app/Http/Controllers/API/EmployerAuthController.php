@@ -8,16 +8,16 @@ use Illuminate\Support\Facades\Validator;
 use App\Models\Employer;
 use Illuminate\Support\Facades\Hash;
 use App\Mail\SendOtpMail;
-
-
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 use App\Models\OtpVerification;
+
 class EmployerAuthController extends Controller
 {
-
-     
+    /**
+     * Send OTP to email
+     */
     public function sendOtp(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -30,13 +30,8 @@ class EmployerAuthController extends Controller
 
         $email = $request->contact_email;
 
-        // Check if email is already registered
-        if (Employer::where('contact_email', $email)->exists()) {
-            return response()->json(['message' => 'Email already registered'], 400);
-        }
-
         // Generate OTP
-        $otp = rand(100000, 999999);
+        $otp = sprintf("%06d", mt_rand(100000, 999999)); // Secure 6-digit OTP
 
         // Store or update OTP in otp_verifications table
         OtpVerification::updateOrCreate(
@@ -44,6 +39,7 @@ class EmployerAuthController extends Controller
             [
                 'otp' => $otp,
                 'expires_at' => Carbon::now()->addMinutes(10),
+                'session_token' => null, // Reset session token
             ]
         );
 
@@ -57,48 +53,61 @@ class EmployerAuthController extends Controller
             ], 500);
         }
 
-        return response()->json(['success' => true, 'message' => 'OTP sent to email']);
+        return response()->json([
+            'success' => true,
+            'message' => 'OTP sent to email',
+        ]);
     }
 
     /**
      * Verify OTP before account creation
      */
-   public function verifyOtp(Request $request)
-{
-    $validator = Validator::make($request->all(), [
-        'contact_email' => 'required|email',
-        'otp' => 'required|numeric|digits:6',
-    ]);
+    public function verifyOtp(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'contact_email' => 'required|email',
+            'otp' => 'required|numeric|digits:6',
+        ]);
 
-    if ($validator->fails()) {
-        return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $otpRecord = OtpVerification::where('email', $request->contact_email)
+            ->where('otp', $request->otp)
+            ->first();
+
+        if (!$otpRecord) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid OTP',
+            ], 400);
+        }
+
+        if (Carbon::now()->gt($otpRecord->expires_at)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'OTP has expired',
+            ], 400);
+        }
+
+        // Generate a session token and store it
+        $sessionToken = Str::random(60);
+        $otpRecord->update([
+            'session_token' => $sessionToken,
+            'session_token_expires_at' => Carbon::now()->addMinutes(30), // Token expires in 30 minutes
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'OTP verified successfully',
+            'session_token' => $sessionToken,
+            'email' => $request->contact_email,
+        ]);
     }
-
-    $otpRecord = OtpVerification::where('email', $request->contact_email)
-        ->where('otp', $request->otp)
-        ->first();
-
-    if (!$otpRecord) {
-        return response()->json(['success' => false, 'message' => 'Invalid OTP'], 400);
-    }
-
-    if (Carbon::now()->gt($otpRecord->expires_at)) {
-        return response()->json(['success' => false, 'message' => 'OTP has expired'], 400);
-    }
-
-    // OTP is valid; delete the OTP record
-    $otpRecord->delete();
-
-    // Generate a session token to use during signup
-    $sessionToken = Str::random(60);
-
-    return response()->json([
-        'success' => true,
-        'message' => 'OTP verified successfully',
-        'session_token' => $sessionToken,
-        'email' => $request->contact_email,
-    ]);
-}
 
     /**
      * Create employer account after OTP verification
@@ -107,7 +116,7 @@ class EmployerAuthController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'contact_email' => 'required|email|unique:employers,contact_email',
-            'session_token' => 'required|string',
+  
             'password' => 'required|string|min:6',
             'name' => 'required|string|max:255',
             'company_name' => 'string|max:255',
@@ -120,10 +129,12 @@ class EmployerAuthController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        // Verify session token (optional, depending on your flow)
-        // For simplicity, we assume the session_token was returned during verifyOtp
-        // You can add additional checks if needed
+    
+      
 
+      
+
+        // Create employer account
         $employer = Employer::create([
             'name' => $request->name,
             'company_name' => $request->company_name,
@@ -133,82 +144,47 @@ class EmployerAuthController extends Controller
             'contact_phone' => $request->contact_phone,
             'password' => Hash::make($request->password),
             'email_verified_at' => now(),
-            'session_token' => $request->session_token,
+
         ]);
 
+       
+
+        // Generate authentication token
         $token = $employer->createToken('EmployerToken')->plainTextToken;
 
         return response()->json([
+            'success' => true,
             'message' => 'Employer account created successfully',
             'token' => $token,
-            'session_token' => $employer->session_token,
+    
         ], 201);
     }
 
-    /**
-     * Employer login
-     */
-    public function login(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'contact_email' => 'required|email',
-            'password' => 'required|string',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-        $employer = Employer::where('contact_email', $request->contact_email)->first();
-
-        if (!$employer || !Hash::check($request->password, $employer->password)) {
-            return response()->json(['message' => 'Invalid credentials'], 401);
-        }
-
-        if (!$employer->email_verified_at) {
-            return response()->json(['message' => 'Email not verified'], 403);
-        }
-
-        if (!$employer->is_verified) {
-            return response()->json(['message' => 'Awaiting admin approval'], 403);
-        }
-
-        // Generate a new session token
-        $sessionToken = Str::random(60);
-        $employer->update(['session_token' => $sessionToken]);
-
-        $token = $employer->createToken('EmployerToken')->plainTextToken;
-
-        return response()->json([
-            'token' => $token,
-            'session_token' => $sessionToken,
-        ]);
-    }
-
-    /**
-     * Get employer profile
-     */
     public function profile(Request $request)
-    {
-        $employer = auth()->user();
+{
+    // Retrieve the authenticated employer
+    $employer = $request->user();
 
-        if ($employer->session_token !== $request->header('Session-Token')) {
-            return response()->json(['message' => 'Invalid session token'], 401);
-        }
-
-        return response()->json($employer);
+    if (!$employer) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Unauthorized',
+        ], 401);
     }
 
-    /**
-     * Employer logout
-     */
-    public function logout(Request $request)
-    {
-        $employer = auth()->user();
-        $employer->update(['session_token' => null]);
-        $employer->tokens()->delete();
-
-        return response()->json(['message' => 'Logged out successfully']);
-    }
-
+    return response()->json([
+        'success' => true,
+        'message' => 'Employer profile retrieved successfully',
+        'data' => [
+            'id' => $employer->id,
+            'name' => $employer->name,
+            'company_name' => $employer->company_name,
+            'company_location' => $employer->company_location,
+            'contact_person' => $employer->contact_person,
+            'contact_email' => $employer->contact_email,
+            'contact_phone' => $employer->contact_phone,
+            'email_verified_at' => $employer->email_verified_at,
+        ],
+    ], 200);
+}
 }
