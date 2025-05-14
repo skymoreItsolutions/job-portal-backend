@@ -14,6 +14,7 @@ use App\Http\Controllers\API\CandidateSkillController;
 use App\Http\Controllers\API\CandidateLanguageController;
 use App\Http\Controllers\API\AuthController;
 
+use App\Http\Controllers\Api\JobPostController;
 use App\Http\Controllers\API\EmployerAuthController;
 
 Route::prefix('v1')->group(function () {
@@ -28,6 +29,7 @@ Route::prefix('v1')->group(function () {
     Route::post('verify-otp', [AuthController::class, 'verifyOtp']);
 
 
+Route::post('job-posts', [JobPostController::class, 'store']);
 
 Route::post('employer/signup', [EmployerAuthController::class, 'signup']);
 Route::post('employer/send-otp', [EmployerAuthController::class, 'sendOtp']);

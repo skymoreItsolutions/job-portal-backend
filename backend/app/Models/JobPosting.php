@@ -29,10 +29,12 @@ class JobPosting extends Model
         'number_of_candidates_required',
     ];
 
-    protected $casts = [
+   protected $casts = [
         'additional_requirements' => 'array',
-        'other_job_titles' => 'array',  // For storing job titles that can apply
-        'degree_specialization' => 'array',  // For storing degrees and specializations
+        'other_job_titles' => 'array',
+        'degree_specialization' => 'array',
+        'joining_fee' => 'boolean',
+        'is_walkin_interview' => 'boolean',
     ];
 
     public function employer()
