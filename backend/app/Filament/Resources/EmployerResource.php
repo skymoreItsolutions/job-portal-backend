@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
+use Filament\Tables\Columns\ToggleColumn;
 
 
 class EmployerResource extends Resource
@@ -54,12 +55,35 @@ class EmployerResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+
             ->columns([
+                   TextColumn::make('id')->sortable(),
+                  ToggleColumn::make('is_verified')
+                ->label('Verified')
+                ->sortable()
+                ->onColor('success')
+                ->offColor('danger')
+                ->afterStateUpdated(function ($record, $state) {
+                    // Optionally do something on toggle update
+                    // Example: Send notification
+                    // $record->notify(new EmployerVerifiedNotification());
+                }),
+                ToggleColumn::make('is_blocked')
+    ->label('Blocked')
+    ->sortable()
+    ->onColor('danger')
+    ->offColor('success')
+    ->afterStateUpdated(function ($record, $state) {
+        // Optional: Add logic when blocking/unblocking
+        // For example, send notification
+    }),
+             
                 TextColumn::make('company_name')->sortable()->searchable(),
                 TextColumn::make('company_location')->sortable()->searchable(),
                 TextColumn::make('contact_person')->sortable()->searchable(),
                 TextColumn::make('contact_email')->sortable()->searchable(),
                 TextColumn::make('contact_phone')->sortable()->searchable(),
+              
             ])
             ->filters([
                 //

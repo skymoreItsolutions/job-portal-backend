@@ -15,6 +15,9 @@ use App\Http\Controllers\API\CandidateSkillController;
 use App\Http\Controllers\API\CandidateLanguageController;
 use App\Http\Controllers\API\AuthController;
 
+use App\Http\Controllers\Api\JobPostController;
+use App\Http\Controllers\API\EmployerAuthController;
+
 Route::prefix('v1')->group(function () {
     Route::apiResource('candidates', CandidateController::class);
     Route::apiResource('candidate-educations', CandidateEducationController::class);
@@ -25,10 +28,21 @@ Route::prefix('v1')->group(function () {
     Route::post('signup', [AuthController::class, 'signup']);
     Route::post('send-otp', [AuthController::class, 'sendOtp']);
     Route::post('verify-otp', [AuthController::class, 'verifyOtp']);
-});
 
+
+Route::post('job-posts', [JobPostController::class, 'store']);
+
+Route::post('employer/signup', [EmployerAuthController::class, 'signup']);
+Route::post('employer/send-otp', [EmployerAuthController::class, 'sendOtp']);
+
+Route::post('employer/verify-otp', [EmployerAuthController::class, 'verifyOtp']);
+Route::post('employer/login', [EmployerAuthController::class, 'login']);
+
+
+Route::middleware('auth:employer-api')->get('employer/profile', [EmployerAuthController::class, 'profile']);
+
+});
 
 Route::post("v1/updatecandidate/{token}",[AllCandidateController::class,"AddCandidateInfo"]);
 Route::get("v1/candidateinfo/{token}",[AllCandidateController::class,"getCandidateinfo"]);
-
 

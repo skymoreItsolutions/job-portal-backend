@@ -18,7 +18,8 @@ class JobPostingApplicationSeeder extends Seeder
         foreach ($candidates as $candidate) {
             foreach ($jobPostings->random(2) as $jobPosting) { // Randomly select 2 job postings
                 JobPostingApplication::create([
-                    'candidate_id' => $candidate->id, // Changed to candidate_id
+                    'candidate_id' => $candidate->id, 
+                    'user_id' => 1,
                     'job_posting_id' => $jobPosting->id,
                     'status' => fake()->randomElement(['applied', 'interview', 'rejected', 'hired']),
                 ]);
