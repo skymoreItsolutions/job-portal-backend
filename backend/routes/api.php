@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AllCandidateController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -25,3 +26,9 @@ Route::prefix('v1')->group(function () {
     Route::post('send-otp', [AuthController::class, 'sendOtp']);
     Route::post('verify-otp', [AuthController::class, 'verifyOtp']);
 });
+
+
+Route::post("v1/updatecandidate/{token}",[AllCandidateController::class,"AddCandidateInfo"]);
+Route::get("v1/candidateinfo/{token}",[AllCandidateController::class,"getCandidateinfo"]);
+
+
