@@ -88,4 +88,51 @@ class JobPostController extends Controller
             ], 500);
         }
     }
+    public function getByEmployer($employerId): JsonResponse
+{
+    $jobs = JobPosting::where('employer_id', $employerId)->get();
+
+    return response()->json([
+        'status' => 'success',
+        'data' => $jobs
+    ]);
+}
+
+public function index(Request $request): JsonResponse
+{
+    $query = JobPosting::query();
+
+    if ($request->has('job_type')) {
+        $query->where('job_type', $request->job_type);
+    }
+
+    if ($request->has('location')) {
+        $query->where('location', 'like', '%' . $request->location . '%');
+    }
+
+    if ($request->has('work_location_type')) {
+        $query->where('work_location_type', $request->work_location_type);
+    }
+
+    if ($request->has('pay_type')) {
+        $query->where('pay_type', $request->pay_type);
+    }
+
+    if ($request->has('is_walkin_interview')) {
+        $query->where('is_walkin_interview', $request->is_walkin_interview);
+    }
+
+    if ($request->has('total_experience_required')) {
+        $query->where('total_experience_required', '<=', $request->total_experience_required);
+    }
+
+    $jobs = $query->latest()->paginate(10); // Paginate results
+
+    return response()->json([
+        'status' => 'success',
+        'data' => $jobs
+    ]);
+}
+
+
 }

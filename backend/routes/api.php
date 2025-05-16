@@ -36,7 +36,9 @@ Route::post('employer/send-otp', [EmployerAuthController::class, 'sendOtp']);
 
 Route::post('employer/verify-otp', [EmployerAuthController::class, 'verifyOtp']);
 Route::post('employer/login', [EmployerAuthController::class, 'login']);
+Route::get('/jobs/employer/{id}', [JobPostController::class, 'getByEmployer']);
 
+Route::get('/jobs', [JobPostController::class, 'index']);
 
 Route::middleware('auth:employer-api')->get('employer/profile', [EmployerAuthController::class, 'profile']);
 

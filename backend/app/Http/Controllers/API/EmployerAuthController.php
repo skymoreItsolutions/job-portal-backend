@@ -62,52 +62,60 @@ class EmployerAuthController extends Controller
     /**
      * Verify OTP before account creation
      */
-    public function verifyOtp(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'contact_email' => 'required|email',
-            'otp' => 'required|numeric|digits:6',
-        ]);
+ public function verifyOtp(Request $request)
+{
+    $validator = Validator::make($request->all(), [
+        'contact_email' => 'required|email',
+        'otp' => 'required|numeric|digits:6',
+    ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors(),
-            ], 422);
-        }
+    if ($validator->fails()) {
+        return response()->json([
+            'success' => false,
+            'errors' => $validator->errors(),
+        ], 422);
+    }
 
-        $otpRecord = OtpVerification::where('email', $request->contact_email)
-            ->where('otp', $request->otp)
-            ->first();
+    $otpRecord = OtpVerification::where('email', $request->contact_email)
+        ->where('otp', $request->otp)
+        ->first();
 
-        if (!$otpRecord) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Invalid OTP',
-            ], 400);
-        }
+    if (!$otpRecord) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Invalid OTP',
+        ], 400);
+    }
 
-        if (Carbon::now()->gt($otpRecord->expires_at)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'OTP has expired',
-            ], 400);
-        }
+    if (Carbon::now()->gt($otpRecord->expires_at)) {
+        return response()->json([
+            'success' => false,
+            'message' => 'OTP has expired',
+        ], 400);
+    }
 
-        // Generate a session token and store it
+    // Check if employer exists
+    $employer = Employer::where('contact_email', $request->contact_email)->first();
+
+    $response = [
+        'success' => true,
+        'message' => 'OTP verified successfully',
+        'email' => $request->contact_email,
+    ];
+
+    // Only generate and return session token if employer exists
+    if ($employer) {
         $sessionToken = Str::random(60);
         $otpRecord->update([
             'session_token' => $sessionToken,
-            'session_token_expires_at' => Carbon::now()->addMinutes(30), // Token expires in 30 minutes
+            'session_token_expires_at' => Carbon::now()->addMinutes(30),
         ]);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'OTP verified successfully',
-            'session_token' => $sessionToken,
-            'email' => $request->contact_email,
-        ]);
+        $response['session_token'] = $sessionToken;
     }
+
+    return response()->json($response);
+}
 
     /**
      * Create employer account after OTP verification
