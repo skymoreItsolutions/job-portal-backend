@@ -13,6 +13,7 @@ use Illuminate\Support\Str;
 use Carbon\Carbon;
 use App\Models\OtpVerification;
 
+use App\Mail\NewCompanyRegistered;
 class EmployerAuthController extends Controller
 {
     /**
@@ -120,53 +121,48 @@ class EmployerAuthController extends Controller
     /**
      * Create employer account after OTP verification
      */
-    public function signup(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'contact_email' => 'required|email|unique:employers,contact_email',
-  
-            'password' => 'required|string|min:6',
-            'name' => 'required|string|max:255',
-            'company_name' => 'string|max:255',
-            'company_location' => 'string|max:255',
-            'contact_person' => 'string|max:255',
-            'contact_phone' => 'string|max:20',
-        ]);
+   public function signup(Request $request)
+{
+    $validator = Validator::make($request->all(), [
+        'contact_email' => 'required|email',
+        'password' => 'required|string|min:6',
+        'name' => 'required|string|max:255',
+        'company_name' => 'nullable|string|max:255',
+        'company_location' => 'nullable|string|max:255',
+        'contact_person' => 'nullable|string|max:255',
+        'contact_phone' => 'nullable|string|max:20',
+    ]);
 
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
+    if ($validator->fails()) {
+        return response()->json(['errors' => $validator->errors()], 422);
+    }
 
-    
-      
-
-      
-
-        // Create employer account
-        $employer = Employer::create([
+    // Create or update employer by email
+    $employer = Employer::updateOrCreate(
+        ['contact_email' => $request->contact_email],
+        [
             'name' => $request->name,
             'company_name' => $request->company_name,
             'company_location' => $request->company_location,
             'contact_person' => $request->contact_person,
-            'contact_email' => $request->contact_email,
             'contact_phone' => $request->contact_phone,
             'password' => Hash::make($request->password),
             'email_verified_at' => now(),
+        ]
+    );
 
-        ]);
+    Mail::to('manshu.developer@gmail.com')->send(new NewCompanyRegistered($employer));
 
-       
+    // Generate token
+    $token = $employer->createToken('EmployerToken')->plainTextToken;
 
-        // Generate authentication token
-        $token = $employer->createToken('EmployerToken')->plainTextToken;
+    return response()->json([
+        'success' => true,
+        'message' => 'Employer account created/updated successfully',
+        'token' => $token,
+    ], 201);
+}
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Employer account created successfully',
-            'token' => $token,
-    
-        ], 201);
-    }
 
     public function profile(Request $request)
 {
@@ -182,17 +178,9 @@ class EmployerAuthController extends Controller
 
     return response()->json([
         'success' => true,
-        'message' => 'Employer profile retrieved successfully',
-        'data' => [
-            'id' => $employer->id,
-            'name' => $employer->name,
-            'company_name' => $employer->company_name,
-            'company_location' => $employer->company_location,
-            'contact_person' => $employer->contact_person,
-            'contact_email' => $employer->contact_email,
-            'contact_phone' => $employer->contact_phone,
-            'email_verified_at' => $employer->email_verified_at,
-        ],
+        'message' => 'All employers retrieved successfully',
+        'data' => $employer,
     ], 200);
+
 }
 }
