@@ -19,6 +19,8 @@ use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Repeater;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\ToggleColumn;
+
 class JobPostingResource extends Resource
 {
     protected static ?string $model = JobPosting::class;
@@ -29,6 +31,10 @@ class JobPostingResource extends Resource
     {
         return $form
             ->schema([
+
+            
+
+
                 Select::make('employer_id')
                 ->label('Employer')
                 ->relationship('employer', 'company_name')
@@ -120,7 +126,16 @@ class JobPostingResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+           ->defaultSort('id', 'desc')
             ->columns([
+                ToggleColumn::make('is_verified')
+                ->label('Verified')
+                ->sortable()
+                ->onColor('success')
+                ->offColor('danger')
+                ->afterStateUpdated(function ($record, $state) {
+            
+                }),
                 TextColumn::make('employer.company_name')->label('Employer'),
                 TextColumn::make('job_title')->searchable()->sortable(),
                 TextColumn::make('job_type')->badge(),

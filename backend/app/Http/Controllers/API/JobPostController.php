@@ -7,6 +7,9 @@ use App\Models\JobPosting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Mail;
+
+use App\Mail\JobPostingMail;
 
 class JobPostController extends Controller
 {
@@ -72,7 +75,10 @@ class JobPostController extends Controller
                 'job_description' => $request->job_description,
                 'job_expire_time' => $request->job_expire_time ?? 7,
                 'number_of_candidates_required' => $request->number_of_candidates_required ?? 1,
-            ]);
+            ]);          
+            // Mail::to('manshu.developer@gmail.com')->send(new JobPostingMail($JobPosting));
+
+
 
             return response()->json([
                 'status' => 'success',
@@ -88,6 +94,8 @@ class JobPostController extends Controller
             ], 500);
         }
     }
+
+
     public function getByEmployer($employerId): JsonResponse
 {
     $jobs = JobPosting::where('employer_id', $employerId)->get();

@@ -81,7 +81,6 @@ class EmployerResource extends Resource
              
                 TextColumn::make('company_name')->sortable()->searchable(),
                 TextColumn::make('company_location')->sortable()->searchable(),
-                TextColumn::make('contact_person')->sortable()->searchable(),
                 TextColumn::make('contact_email')->sortable()->searchable(),
                 TextColumn::make('contact_phone')->sortable()->searchable(),
               
