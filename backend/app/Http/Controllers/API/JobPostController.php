@@ -106,10 +106,49 @@ class JobPostController extends Controller
     ]);
 }
 
-public function index(Request $request): JsonResponse
-{
-    $query = JobPosting::query();
+ public function index(Request $request): JsonResponse
+ {
+        // Validate incoming request
+        $validator = Validator::make($request->all(), [
+            'job_type' => 'string|in:full-time,part-time,contract,internship',
+            'location' => 'string|max:255',
+            'work_location_type' => 'string|in:remote,on-site,hybrid',
+            'pay_type' => 'string|in:hourly,salary,commission',
+            'is_walkin_interview' => 'boolean',
+            'total_experience_required' => 'numeric|min:0',
+        ]);
 
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        // Build query
+        $query = JobPosting::query();
+
+        // Apply filters
+        $this->applyFilters($query, $request);
+
+        // Paginate results
+        $jobs = $query->latest()->paginate(10);
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $jobs
+        ]);
+    }
+
+    /**
+     * Apply filters to the job posting query.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param Request $request
+     * @return void
+     */
+private function applyFilters($query, Request $request): void
+{
     if ($request->has('job_type')) {
         $query->where('job_type', $request->job_type);
     }
@@ -134,13 +173,23 @@ public function index(Request $request): JsonResponse
         $query->where('total_experience_required', '<=', $request->total_experience_required);
     }
 
-    $jobs = $query->latest()->paginate(10); // Paginate results
+    if ($request->has('date_posted')) {
+        switch ($request->date_posted) {
+            case 'last_3_days':
+                $query->where('created_at', '>=', now()->subDays(3));
+                break;
+            case 'last_10_days':
+                $query->where('created_at', '>=', now()->subDays(10));
+                break;
+            case 'last_30_days':
+                $query->where('created_at', '>=', now()->subDays(30));
+                break;
+        }
+    }
 
-    return response()->json([
-        'status' => 'success',
-        'data' => $jobs
-    ]);
+  
 }
+
 
 
 }

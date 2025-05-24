@@ -75,7 +75,7 @@ class AuthController extends Controller
 
     
 
-    // Verify OTP and login
+
     public function verifyOtp(Request $request)
     {
         $request->validate([
