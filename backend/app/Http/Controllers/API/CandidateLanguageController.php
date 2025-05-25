@@ -3,47 +3,49 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Models\CandidateLanguage;
 use Illuminate\Http\Request;
 
 class CandidateLanguageController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        //
+        return response()->json(CandidateLanguage::with('candidate')->get());
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'candidate_id' => 'required|exists:candidates,id',
+            'language_name' => 'required|string|max:255',
+        ]);
+
+        $language = CandidateLanguage::create($validated);
+        return response()->json($language, 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function show($id)
     {
-        //
+        $language = CandidateLanguage::with('candidate')->findOrFail($id);
+        return response()->json($language);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function update(Request $request, $id)
     {
-        //
+        $language = CandidateLanguage::findOrFail($id);
+
+        $validated = $request->validate([
+            'candidate_id' => 'sometimes|exists:candidates,id',
+            'language_name' => 'sometimes|string|max:255',
+        ]);
+
+        $language->update($validated);
+        return response()->json($language);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    public function destroy($id)
     {
-        //
+        CandidateLanguage::destroy($id);
+        return response()->json(['message' => 'Deleted successfully']);
     }
 }
