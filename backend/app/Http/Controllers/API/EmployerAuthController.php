@@ -167,7 +167,7 @@ class EmployerAuthController extends Controller
     public function profile(Request $request)
 {
     // Retrieve the authenticated employer
-    $employer = $request->user();
+    $employer = $request->employers();
 
     if (!$employer) {
         return response()->json([
