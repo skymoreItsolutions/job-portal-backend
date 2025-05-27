@@ -12,7 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('employers', function (Blueprint $table) {
-           $table->string('session_token')->nullable()->after('otp');
+            $table->string('gst_certificate')->nullable()->after('gst_number');
+    $table->string('company_pan_card')->nullable()->after('gst_certificate');
         });
     }
 
@@ -22,7 +23,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('employers', function (Blueprint $table) {
-            $table->dropColumn('session_token');
+            //
         });
     }
 };
