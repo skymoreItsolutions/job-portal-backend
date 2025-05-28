@@ -3,47 +3,49 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Models\CandidateSkill;
 use Illuminate\Http\Request;
 
 class CandidateSkillController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        //
+        return response()->json(CandidateSkill::with('candidate')->get());
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'candidate_id' => 'required|exists:candidates,id',
+            'skill_name' => 'required|string|max:255',
+        ]);
+
+        $skill = CandidateSkill::create($validated);
+        return response()->json($skill, 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function show($id)
     {
-        //
+        $skill = CandidateSkill::with('candidate')->findOrFail($id);
+        return response()->json($skill);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function update(Request $request, $id)
     {
-        //
+        $skill = CandidateSkill::findOrFail($id);
+
+        $validated = $request->validate([
+            'candidate_id' => 'sometimes|exists:candidates,id',
+            'skill_name' => 'sometimes|string|max:255',
+        ]);
+
+        $skill->update($validated);
+        return response()->json($skill);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    public function destroy($id)
     {
-        //
+        CandidateSkill::destroy($id);
+        return response()->json(['message' => 'Deleted successfully']);
     }
 }

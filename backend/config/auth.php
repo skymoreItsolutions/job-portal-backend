@@ -40,7 +40,7 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
-        'employer-api' => [
+       'employer-api' => [
         'driver' => 'sanctum',
         'provider' => 'employers',
     ],
@@ -73,7 +73,7 @@ return [
             'model' => env('AUTH_MODEL', App\Models\User::class),
         ],
 
-            'employers' => [
+    'employers' => [
         'driver' => 'eloquent',
         'model' => App\Models\Employer::class,
     ],

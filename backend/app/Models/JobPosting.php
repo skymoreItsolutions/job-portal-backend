@@ -27,6 +27,7 @@ class JobPosting extends Model
         'degree_specialization',
         'job_expire_time',
         'number_of_candidates_required',
+        'is_verified'
     ];
 
    protected $casts = [

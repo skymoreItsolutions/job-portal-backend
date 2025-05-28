@@ -8,11 +8,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('candidates', function (Blueprint $table) {
-            if (!Schema::hasColumn('candidates', 'number')) {
+            
                 $table->string('number')->nullable(); // Add column if it doesn't exist
-            } else {
-                $table->string('number')->nullable()->change(); // Only modify if it exists
-            }
+            
 
             $table->string('full_name')->nullable()->change();
             $table->date('dob')->nullable()->change();
@@ -28,7 +26,7 @@ return new class extends Migration
             $table->integer('experience_years')->nullable()->change();
             $table->integer('experience_months')->nullable()->change();
             $table->string('job_title')->nullable()->change();
-            $table->json('job_roles')->nullable()->change();
+            $table->string('job_roles')->nullable()->change();
             $table->string('company_name')->nullable()->change();
             $table->decimal('current_salary', 10, 2)->nullable()->change();
             $table->date('start_date')->nullable()->change();

@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Candidate;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Mockery\Undefined;
 
 class AllCandidateController extends Controller
 {
@@ -13,6 +15,7 @@ class AllCandidateController extends Controller
 $candidate=Candidate::whereToken($token)->first();
 
 $candidate->full_name=$request->full_name ?? $candidate->full_name;
+$candidate->number=$request->number ?? $candidate->number;
 $candidate->dob=$request->dob ?? $candidate->dob;
 $candidate->gender=$request->gender ?? $candidate->gender;
 $candidate->email=$request->email ?? $candidate->email;
@@ -37,10 +40,21 @@ $candidate->work_from_home=$request->work_from_home ?? $candidate->work_from_hom
 $candidate->work_from_office=$request->work_from_office ?? $candidate->work_from_office;
 $candidate->skills=$request->skills ?? $candidate->skills;
 $candidate->preferred_language=$request->preferred_language ?? $candidate->preferred_language;
+$path =null;
+if($request->hasFile("resume")){
+    if($candidate->resume){
+        Storage::disk("public")->delete($candidate->resume);
+    }
+       $path = $request->file('resume')->store('pdf',"public");
+
+    // 
+}
+$candidate->resume=$path;
+
 $candidate->save();
 
 
-return response()->json(["success"=>true,"message"=>"updated"]);
+return response()->json(["success"=>true,"message"=>"updated","path"=>$path]);
 
 
 

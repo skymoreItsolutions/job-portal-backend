@@ -4,9 +4,23 @@ namespace App\Filament\Widgets;
 
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
-
+use Filament\Forms\Components\DatePicker;
 class StatsOverview extends BaseWidget
 {
+
+     protected function getFormSchema(): array
+    {
+        return [
+            DatePicker::make('start_date')
+                ->label('Start Date')
+                ->default(now()->startOfMonth()),
+
+            DatePicker::make('end_date')
+                ->label('End Date')
+                ->default(now()),
+        ];
+    }
+
     protected function getStats(): array
     {
         // Calculate percentage for Active Jobs
@@ -35,6 +49,8 @@ class StatsOverview extends BaseWidget
                     'title' => 'Click to view employer list',
                 ]),
 
+
+
             Stat::make('Total Jobs', '200')
                 ->description('Jobs posted')
                 ->descriptionIcon('heroicon-m-arrow-trending-up')
@@ -44,6 +60,28 @@ class StatsOverview extends BaseWidget
                 ->extraAttributes([
                     'class' => 'cursor-pointer hover:shadow-lg transition-shadow',
                     'title' => 'Click to view all jobs',
+                ]),
+
+            
+            Stat::make('Pending Employers Verify', '29')
+                ->description('Companies using the platform')
+                ->descriptionIcon('heroicon-m-arrow-trending-up')
+                ->chart([30, 35, 38, 40, 42, 44])
+                ->color('info')
+                ->extraAttributes([
+                    'class' => 'cursor-pointer hover:shadow-lg transition-shadow',
+                    'title' => 'Click to view employer list',
+                ]),
+
+
+                  Stat::make('Pending Job Post ', '12')
+                ->description('Companies using the platform')
+                ->descriptionIcon('heroicon-m-arrow-trending-up')
+                ->chart([30, 35, 38, 40, 42, 44])
+                ->color('warning')
+                ->extraAttributes([
+                    'class' => 'cursor-pointer hover:shadow-lg transition-shadow',
+                    'title' => 'Click to view employer list',
                 ]),
 
             Stat::make('Active Jobs', $activeJobsPercentage)
@@ -74,6 +112,17 @@ class StatsOverview extends BaseWidget
                 ->extraAttributes([
                     'class' => 'cursor-pointer hover:shadow-lg transition-shadow',
                     'title' => 'Click to view new users',
+                ]),
+
+            
+            Stat::make('Block Employers ', '10')
+                ->description('Companies using the platform')
+                ->descriptionIcon('heroicon-m-arrow-trending-up')
+                ->chart([30, 35, 38, 40, 42, 44])
+                ->color('danger')
+                ->extraAttributes([
+                    'class' => 'cursor-pointer hover:shadow-lg transition-shadow',
+                    'title' => 'Click to view employer list',
                 ]),
         ];
     }

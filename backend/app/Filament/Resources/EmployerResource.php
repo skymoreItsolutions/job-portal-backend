@@ -55,38 +55,52 @@ class EmployerResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-
+         ->defaultSort('id', 'desc')
             ->columns([
-                   TextColumn::make('id')->sortable(),
+              TextColumn::make('serial')
+    ->label('S.No')
+    ->state(
+        fn ($record, $livewire) =>
+            ($livewire->getTableRecordsPerPage() * ($livewire->getTablePage() - 1)) + $livewire->getTableRecords()->search(fn ($r) => $r->getKey() === $record->getKey()) + 1
+    ),
                   ToggleColumn::make('is_verified')
                 ->label('Verified')
                 ->sortable()
                 ->onColor('success')
                 ->offColor('danger')
                 ->afterStateUpdated(function ($record, $state) {
-                    // Optionally do something on toggle update
-                    // Example: Send notification
-                    // $record->notify(new EmployerVerifiedNotification());
+            
                 }),
                 ToggleColumn::make('is_blocked')
-    ->label('Blocked')
-    ->sortable()
-    ->onColor('danger')
-    ->offColor('success')
-    ->afterStateUpdated(function ($record, $state) {
-        // Optional: Add logic when blocking/unblocking
-        // For example, send notification
-    }),
+                ->label('Blocked')
+                ->sortable()
+                ->onColor('danger')
+                ->offColor('success')
+                ->afterStateUpdated(function ($record, $state) {
+                   }),
              
                 TextColumn::make('company_name')->sortable()->searchable(),
                 TextColumn::make('company_location')->sortable()->searchable(),
-                TextColumn::make('contact_person')->sortable()->searchable(),
                 TextColumn::make('contact_email')->sortable()->searchable(),
                 TextColumn::make('contact_phone')->sortable()->searchable(),
               
             ])
             ->filters([
-                //
+                 Tables\Filters\TernaryFilter::make('is_verified')
+        ->label('Verified'),
+
+    Tables\Filters\TernaryFilter::make('is_blocked')
+        ->label('Blocked'),
+
+    Tables\Filters\Filter::make('company_name')
+        ->form([
+            TextInput::make('company_name'),
+        ])
+        ->query(function (Builder $query, array $data) {
+            return $query
+                ->when($data['company_name'], fn ($q) =>
+                    $q->where('company_name', 'like', '%' . $data['company_name'] . '%'));
+        }),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

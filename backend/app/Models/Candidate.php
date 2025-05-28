@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -7,6 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 class Candidate extends Model
 {
     use HasFactory;
+
+    protected $table = 'candidates';
 
     protected $fillable = [
         'full_name',
@@ -28,7 +31,7 @@ class Candidate extends Model
         'total_jobs_applied',
         'total_job_views',
         'otp',
-    'otp_expires_at',
+        'otp_expires_at',
     ];
 
     public function educations()
