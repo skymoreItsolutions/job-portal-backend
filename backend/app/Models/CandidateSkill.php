@@ -14,6 +14,9 @@ class CandidateSkill extends Model
         'skill_name',
     ];
 
+ 
+
+
     public function candidate()
     {
         return $this->belongsTo(Candidate::class);
