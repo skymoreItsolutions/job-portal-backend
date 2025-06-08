@@ -32,7 +32,19 @@ class Candidate extends Model
         'total_job_views',
         'otp',
         'otp_expires_at',
+        "password",
+        "doneprofile",
     ];
+
+//    protected $casts = [
+//     'password' => 'hash',
+// ];
+//    public function casts()
+// {
+//     return [
+//         "password" => "hash"
+//     ];
+// }
 
     public function educations()
     {

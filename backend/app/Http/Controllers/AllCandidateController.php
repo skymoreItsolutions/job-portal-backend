@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Candidate;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Mockery\Undefined;
 
@@ -40,6 +41,8 @@ $candidate->work_from_home=$request->work_from_home ?? $candidate->work_from_hom
 $candidate->work_from_office=$request->work_from_office ?? $candidate->work_from_office;
 $candidate->skills=$request->skills ?? $candidate->skills;
 $candidate->preferred_language=$request->preferred_language ?? $candidate->preferred_language;
+$candidate->password= Hash::make( $request->password) ?? $candidate->password;
+$candidate->doneprofile=1;
 $path =null;
 if($request->hasFile("resume")){
     if($candidate->resume){
@@ -65,11 +68,28 @@ return response()->json(["success"=>true,"message"=>"updated","path"=>$path]);
 
  public function getCandidateinfo($token){
 $candidate=Candidate::whereToken($token)->first();
+$candidate->password="1234";
 if(!$candidate){
 return response()->json(["success"=>false]);
 
 }
 return response()->json(["success"=>true,"candidate"=>$candidate]);
+
+ }
+
+
+ public function loginbypasswod(Request $request){
+$email=$request->email;
+$getuser= Candidate::whereEmail($email)->first();
+
+ if (!$getuser || !Hash::check($request->password, $getuser->password)) {
+        return response()->json([
+            "success" => false,
+            "message" => "Invalid email or password"
+        ]);
+    }
+    
+return response()->json(["success"=>true,"message"=>"user Logined","token"=>$getuser->token]);
 
  }
 

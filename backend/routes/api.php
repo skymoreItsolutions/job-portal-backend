@@ -49,4 +49,4 @@ Route::prefix('v1')->group(function () {
 
 Route::post("v1/updatecandidate/{token}",[AllCandidateController::class,"AddCandidateInfo"]);
 Route::get("v1/candidateinfo/{token}",[AllCandidateController::class,"getCandidateinfo"]);
-
+Route::post("v1/candidate/login",[AllCandidateController::class,"loginbypasswod"]);
