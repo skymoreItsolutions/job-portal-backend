@@ -37,7 +37,9 @@ Route::prefix('v1')->group(function () {
 
     Route::post('employer/signup', [EmployerAuthController::class, 'signup']);
     Route::post('employer/send-otp', [EmployerAuthController::class, 'sendOtp']);
+  
 
+//login
     Route::post('employer/verify-otp', [EmployerAuthController::class, 'verifyOtp']);
     Route::post('employer/login', [EmployerAuthController::class, 'login']);
     Route::get('/jobs/employer/{id}', [JobPostController::class, 'getByEmployer']);

@@ -203,12 +203,8 @@ class EmployerAuthController extends Controller
             'company_pan_card.mimes' => 'The company PAN card must be a PDF file.',
         ]);
 
-        // Custom validation: At least one of gst_certificate or company_pan_card is required
-        $validator->after(function ($validator) use ($request) {
-            if (!$request->hasFile('gst_certificate') && !$request->hasFile('company_pan_card')) {
-                $validator->errors()->add('documents', 'At least one of GST certificate or company PAN card is required.');
-            }
-        });
+       
+      
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
@@ -254,6 +250,44 @@ class EmployerAuthController extends Controller
         ], 201);
     }
 
+    public function login(Request $request)
+{
+    $validator = Validator::make($request->all(), [
+        'contact_email' => 'required|email',
+        'password' => 'required|string',
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json(['errors' => $validator->errors()], 422);
+    }
+
+    $employer = Employer::where('contact_email', $request->contact_email)->first();
+
+    if (!$employer || !Hash::check($request->password, $employer->password)) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Invalid email or password',
+        ], 401);
+    }
+
+    // Delete existing tokens to ensure single active session (optional)
+    $employer->tokens()->delete();
+
+    // Generate new token
+    $token = $employer->createToken('EmployerToken')->plainTextToken;
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Login successful',
+        'token' => $token,
+        'employer' => [
+            'id' => $employer->id,
+            'name' => $employer->name,
+            'contact_email' => $employer->contact_email,
+            'company_name' => $employer->company_name,
+        ],
+    ], 200);
+}
 
  public function profile(Request $request)
 {

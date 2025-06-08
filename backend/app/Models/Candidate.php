@@ -4,6 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\CandidateEducation;
+use App\Models\CandidateExperience;
+use App\Models\CandidateSkill;
+use App\Models\CandidateLanguage;
+
+
 
 class Candidate extends Model
 {

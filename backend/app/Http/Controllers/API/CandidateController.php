@@ -6,6 +6,8 @@ use App\Models\Candidate;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class CandidateController extends Controller
 {
@@ -107,7 +109,8 @@ class CandidateController extends Controller
         return response()->json(['message' => 'Candidate deleted successfully'], 200);
     }
 
-      public function filter(Request $request)
+     
+    public function filter(Request $request)
     {
         // Validate query parameters
         $validator = Validator::make($request->all(), [
@@ -120,6 +123,7 @@ class CandidateController extends Controller
         ]);
 
         if ($validator->fails()) {
+            Log::error('Validation failed', ['errors' => $validator->errors()]);
             return response()->json([
                 'error' => 'Invalid input',
                 'messages' => $validator->errors(),
@@ -131,32 +135,41 @@ class CandidateController extends Controller
             ->with(['educations', 'experiences', 'skills', 'languages'])
             ->select('candidates.*');
 
-        // Filter by job title (from CandidateExperience)
-        if ($jobTitle = $request->query('job_title')) {
-            $query->whereHas('experiences', function ($q) use ($jobTitle) {
-                $q->where('job_title', 'like', '%' . $jobTitle . '%');
-            });
-        }
+        // Check if any filter parameters are provided
+        $hasFilters = $request->hasAny(['job_title', 'skills', 'education', 'experience', 'active', 'location']);
 
-        // Filter by skills (from CandidateSkill)
-        if ($skills = $request->query('skills')) {
-            $skillArray = array_map('trim', explode(',', $skills));
-            $query->whereHas('skills', function ($q) use ($skillArray) {
-                $q->whereIn('skill_name', $skillArray);
-            });
-        }
+        if ($hasFilters) {
+            // Filter by job title (from CandidateExperience or direct attribute)
+            if ($jobTitle = $request->query('job_title')) {
+                $query->where(function ($q) use ($jobTitle) {
+                    $q->where('job_title', 'like', '%' . $jobTitle . '%')
+                      ->orWhereHas('experiences', function ($q) use ($jobTitle) {
+                          $q->where('job_title', 'like', '%' . $jobTitle . '%');
+                      });
+                });
+            }
 
-        // Filter by education level (from CandidateEducation)
-        if ($education = $request->query('education')) {
-            $query->whereHas('educations', function ($q) use ($education) {
-                $q->where('degree', $education);
-            });
-        }
+            // Filter by skills (from CandidateSkill)
+             if ($skills = $request->query('skills')) {
+    $skillArray = array_map('trim', explode(',', $skills));
+    $query->whereHas('skills', function ($q) use ($skillArray) {
+        $q->whereIn(DB::raw('LOWER(skill_name)'), array_map('strtolower', $skillArray));
+    });
+}
 
-        // Filter by experience (from CandidateExperience)
-        if ($experience = $request->query('experience')) {
-            $query->whereHas('experiences', function ($q) use ($experience) {
-                // Map experience range to years
+
+            // Filter by education level (from CandidateEducation or direct attribute)
+            if ($education = $request->query('education')) {
+                $query->where(function ($q) use ($education) {
+                    $q->where('degree', $education)
+                      ->orWhereHas('educations', function ($q) use ($education) {
+                          $q->where('degree', $education);
+                      });
+                });
+            }
+
+            // Filter by experience (from CandidateExperience or direct attribute)
+            if ($experience = $request->query('experience')) {
                 $ranges = [
                     '0-2' => [0, 2],
                     '3-5' => [3, 5],
@@ -164,36 +177,62 @@ class CandidateController extends Controller
                     '10+' => [10, 999],
                 ];
                 $range = $ranges[$experience] ?? [0, 999];
-                $q->whereBetween('experience_years', $range);
-            });
+                $query->where(function ($q) use ($range) {
+                    $q->whereBetween('experience_years', $range)
+                      ->orWhereHas('experiences', function ($q) use ($range) {
+                          $q->whereBetween('experience_years', $range);
+                      });
+                });
+            }
+
+            // Filter by active status
+            if ($request->has('active')) {
+                $query->where('active_user', $request->query('active'));
+            }
+
+            // Filter by location (city)
+            if ($location = $request->query('location')) {
+                $query->where('city', 'like', '%' . $location . '%');
+            }
         }
 
-        // Filter by active status
-        if ($request->has('active')) {
-            $query->where('active_user', $request->query('active'));
-        }
+        // Default sorting to ensure consistent order
+        $query->orderBy('full_name', 'asc');
 
-        // Filter by location (city)
-        if ($location = $request->query('location')) {
-            $query->where('city', 'like', '%' . $location . '%');
-        }
-
-        // Paginate results
+        // Paginate results (limit to 10 per page)
         $candidates = $query->paginate(10);
 
         // Transform response to include relevant data
         $candidates->getCollection()->transform(function ($candidate) {
+            // Debug relationships
+            Log::debug('Transforming candidate', [
+                'id' => $candidate->id,
+                'full_name' => $candidate->full_name,
+                'has_experiences' => !is_null($candidate->experiences),
+                'has_skills' => !is_null($candidate->skills),
+                'has_educations' => !is_null($candidate->educations),
+                'has_languages' => !is_null($candidate->languages),
+            ]);
+
             return [
                 'id' => $candidate->id,
                 'name' => $candidate->full_name,
-                'job_title' => $candidate->experiences->pluck('job_title')->first(),
-                'skills' => $candidate->skills->pluck('skill_name'),
-                'experience' => $candidate->experiences->pluck('experience_years')->first(),
-                'location' => $candidate->city,
-                'education' => $candidate->educations->pluck('degree')->first(),
+                'job_title' => $candidate->job_title ?? optional($candidate->experiences)->pluck('job_title')->first() ?? 'N/A',
+          
+              'skills' => explode(',', $candidate->skills),
+
+                'experience' => $candidate->experience_years ?? optional($candidate->experiences)->pluck('experience_years')->first() ?? null,
+                'location' => $candidate->city ?? 'N/A',
+                'education' => $candidate->degree ?? optional($candidate->educations)->pluck('degree')->first() ?? 'N/A',
                 'active' => (bool) $candidate->active_user,
             ];
         });
+
+        Log::info('Candidates fetched', [
+            'filters' => $request->all(),
+            'count' => $candidates->total(),
+            'page' => $candidates->currentPage(),
+        ]);
 
         return response()->json([
             'data' => $candidates->items(),
@@ -207,4 +246,7 @@ class CandidateController extends Controller
             ],
         ], 200);
     }
+ 
+
+  
 }

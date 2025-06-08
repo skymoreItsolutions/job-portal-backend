@@ -30,7 +30,7 @@ class JobPostController extends Controller
             'work_location_type' => 'required|in:Work from Home,Work from Office,Hybrid',
             'compensation' => 'required|string|max:255',
             'pay_type' => 'required|in:Hourly,Salary,Per Project',
-            'basic_requirements' => 'required|string',
+            'basic_requirements' => 'string',
             'additional_requirements' => 'nullable|json',
             'is_walkin_interview' => 'boolean',
             'joining_fee' => 'required|boolean',
