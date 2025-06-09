@@ -151,11 +151,11 @@ class CandidateController extends Controller
 
             // Filter by skills (from CandidateSkill)
              if ($skills = $request->query('skills')) {
-    $skillArray = array_map('trim', explode(',', $skills));
-    $query->whereHas('skills', function ($q) use ($skillArray) {
-        $q->whereIn(DB::raw('LOWER(skill_name)'), array_map('strtolower', $skillArray));
-    });
-}
+                $skillArray = array_map('trim', explode(',', $skills));
+                $query->whereHas('skills', function ($q) use ($skillArray) {
+                    $q->whereIn(DB::raw('LOWER(skill_name)'), array_map('strtolower', $skillArray));
+                });
+     }
 
 
             // Filter by education level (from CandidateEducation or direct attribute)
@@ -215,17 +215,52 @@ class CandidateController extends Controller
             ]);
 
             return [
-                'id' => $candidate->id,
-                'name' => $candidate->full_name,
-                'job_title' => $candidate->job_title ?? optional($candidate->experiences)->pluck('job_title')->first() ?? 'N/A',
-          
-              'skills' => explode(',', $candidate->skills),
+            
+   
 
-                'experience' => $candidate->experience_years ?? optional($candidate->experiences)->pluck('experience_years')->first() ?? null,
-                'location' => $candidate->city ?? 'N/A',
-                'education' => $candidate->degree ?? optional($candidate->educations)->pluck('degree')->first() ?? 'N/A',
-                'active' => (bool) $candidate->active_user,
-            ];
+                'id' => $candidate->id,
+        'full_name' => $candidate->full_name,
+        'dob' => $candidate->dob,
+        'gender' => $candidate->gender,
+        'email' => $candidate->email,
+        'number' => $candidate->number,
+        'address' => $candidate->address,
+        'city' => $candidate->city,
+        'state' => $candidate->state,
+        'prefers_night_shift' => $candidate->prefers_night_shift,
+        'prefers_day_shift' => $candidate->prefers_day_shift,
+        'work_from_home' => $candidate->work_from_home,
+        'work_from_office' => $candidate->work_from_office,
+        'field_job' => $candidate->field_job,
+        'employment_type' => $candidate->employment_type,
+        'resume' => $candidate->resume,
+        'active_user' => (bool) $candidate->active_user,
+        'last_login' => $candidate->last_login,
+        'total_jobs_applied' => $candidate->total_jobs_applied,
+        'total_job_views' => $candidate->total_job_views,
+        'otp' => $candidate->otp,
+        'otp_expires_at' => $candidate->otp_expires_at,
+        'preferred_language' => $candidate->preferred_language,
+        'token' => $candidate->token,
+
+        // From education relationship or main table
+        'degree' => $candidate->degree ?? optional($candidate->educations->first())->degree,
+        'specialization' => $candidate->specialization ?? optional($candidate->educations->first())->specialization,
+        'college_name' => $candidate->college_name ?? optional($candidate->educations->first())->college_name,
+        'passing_marks' => $candidate->passing_marks ?? optional($candidate->educations->first())->passing_marks,
+        'pursuing' => $candidate->pursuing ?? optional($candidate->educations->first())->pursuing,
+
+        // From experience relationship or main table
+        'experience_years' => $candidate->experience_years ?? optional($candidate->experiences->first())->experience_years,
+        'experience_months' => $candidate->experience_months ?? optional($candidate->experiences->first())->experience_months,
+        'job_title' => $candidate->job_title ?? optional($candidate->experiences->first())->job_title,
+        'job_roles' => $candidate->job_roles ?? optional($candidate->experiences->first())->job_roles,
+        'company_name' => $candidate->company_name ?? optional($candidate->experiences->first())->company_name,
+        'current_salary' => $candidate->current_salary ?? optional($candidate->experiences->first())->current_salary,
+        'start_date' => $candidate->start_date ?? optional($candidate->experiences->first())->start_date,
+            'skills' => explode(',', $candidate->skills),
+
+    ];
         });
 
         Log::info('Candidates fetched', [

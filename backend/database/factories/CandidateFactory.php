@@ -38,7 +38,7 @@ class CandidateFactory extends Factory
             'total_jobs_applied' => rand(0, 10),
             'total_job_views' => rand(0, 20),
 
-            'degree' => $this->faker->randomElement(['B.Tech', 'M.Tech', 'BCA', 'MCA']),
+            'degree' => $this->faker->randomElement(['10th', '12th','ITI','graduate', 'postgraduate', 'diploma']),
             'specialization' => $this->faker->randomElement(['Computer Science', 'Electronics', 'Mechanical']),
             'college_name' => $this->faker->company . ' College',
             'passing_marks' => rand(60, 100) . '%',

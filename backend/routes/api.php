@@ -26,7 +26,7 @@ Route::prefix('v1')->group(function () {
     Route::apiResource('candidate/skills', CandidateSkillController::class);
     Route::apiResource('candidate/exp', CandidateExperienceController::class);
     Route::apiResource('candidate/edu', CandidateEducationController::class);
-    Route::get('/candidate', [CandidateController::class, 'filter']);
+    Route::get('/filter', [CandidateController::class, 'filter']);
 
     Route::post('signup', [AuthController::class, 'signup']);
     Route::post('send-otp', [AuthController::class, 'sendOtp']);
