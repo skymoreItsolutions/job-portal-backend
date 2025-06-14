@@ -10,6 +10,8 @@ class JobPosting extends Model
 
     protected $fillable = [
         'employer_id',
+        
+        'company_id', // Add company_id
         'job_title',
         'job_type',
         'location',
@@ -58,5 +60,9 @@ class JobPosting extends Model
     public function inactiveApplicationsCount()
     {
         return $this->applications()->where('status', 'inactive')->count();
+    }
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
     }
 }
