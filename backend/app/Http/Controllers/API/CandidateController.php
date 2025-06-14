@@ -139,23 +139,40 @@ class CandidateController extends Controller
         $hasFilters = $request->hasAny(['job_title', 'skills', 'education', 'experience', 'active', 'location']);
 
         if ($hasFilters) {
-            // Filter by job title (from CandidateExperience or direct attribute)
-            if ($jobTitle = $request->query('job_title')) {
-                $query->where(function ($q) use ($jobTitle) {
-                    $q->where('job_title', 'like', '%' . $jobTitle . '%')
-                      ->orWhereHas('experiences', function ($q) use ($jobTitle) {
-                          $q->where('job_title', 'like', '%' . $jobTitle . '%');
-                      });
+
+            if ($keywords = $request->query('keywords')) {
+                $keywordArray = array_map('trim', explode(' ', $keywords)); // Split keywords by space
+                $query->where(function ($q) use ($keywordArray) {
+                    foreach ($keywordArray as $keyword) {
+                        $q->orWhere('job_title', 'like', '%' . $keyword . '%')
+                          ->orWhere('city', 'like', '%' . $keyword . '%')
+                          ->orWhereHas('skills', function ($q) use ($keyword) {
+                              $q->where('skill_name', 'like', '%' . $keyword . '%');
+                          })
+                          ->orWhereHas('educations', function ($q) use ($keyword) {
+                              $q->where('degree', 'like', '%' . $keyword . '%')
+                                ->orWhere('specialization', 'like', '%' . $keyword . '%');
+                          })
+                          ->orWhereHas('experiences', function ($q) use ($keyword) {
+                              $q->where('job_title', 'like', '%' . $keyword . '%')
+                                ->orWhere('experience_years', 'like', '%' . $keyword . '%');
+                          });
+                    }
                 });
             }
 
+            
+            // Filter by job title (from CandidateExperience or direct attribute)
+            if ($jobTitle = $request->query('job_title')) {
+                $query->where('job_title', 'like', '%' . $jobTitle . '%');
+            }
             // Filter by skills (from CandidateSkill)
              if ($skills = $request->query('skills')) {
                 $skillArray = array_map('trim', explode(',', $skills));
                 $query->whereHas('skills', function ($q) use ($skillArray) {
                     $q->whereIn(DB::raw('LOWER(skill_name)'), array_map('strtolower', $skillArray));
                 });
-     }
+                 }
 
 
             // Filter by education level (from CandidateEducation or direct attribute)

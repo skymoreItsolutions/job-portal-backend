@@ -46,6 +46,9 @@ Route::prefix('v1')->group(function () {
 
     Route::get('/jobs', [JobPostController::class, 'index']);
 
+    Route::post('/add-companies', [EmployerAuthController::class, 'addCompany']);
+    Route::get('/companies', [EmployerAuthController::class, 'listCompanies']);
+
     Route::middleware('auth:employer-api')->get('employer/profile', [EmployerAuthController::class, 'profile']);
 });
 
