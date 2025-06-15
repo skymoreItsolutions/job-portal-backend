@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::table('employers', function (Blueprint $table) {
                   $table->string('password')->nullable();
         $table->timestamp('email_verified_at')->nullable();
-        $table->string('otp')->nullable();
+        // $table->string('otp')->nullable();
         $table->boolean('is_verified')->default(false); // admin approval
         });
     }

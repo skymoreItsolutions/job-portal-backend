@@ -40,17 +40,12 @@ class Candidate extends Model
         'otp_expires_at',
         "password",
         "doneprofile",
+        "skills"
     ];
 
-//    protected $casts = [
-//     'password' => 'hash',
-// ];
-//    public function casts()
-// {
-//     return [
-//         "password" => "hash"
-//     ];
-// }
+  protected $casts = [
+    'skills' => 'array',
+];
 
     public function educations()
     {
@@ -62,10 +57,10 @@ class Candidate extends Model
         return $this->hasMany(CandidateExperience::class);
     }
 
-    public function skills()
-    {
-        return $this->hasMany(CandidateSkill::class);
-    }
+    // public function skills()
+    // {
+    //     return $this->hasMany(CandidateSkill::class);
+    // }
 
     public function languages()
     {

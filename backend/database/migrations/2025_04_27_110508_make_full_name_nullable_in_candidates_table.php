@@ -38,7 +38,6 @@ return new class extends Migration
             $table->string('employment_type')->nullable()->change();
             $table->string('preferred_language')->nullable()->change();
             $table->string('resume')->nullable()->change();
-            $table->text('skills')->nullable()->change();
             $table->tinyInteger('active_user')->default(1)->change();
             $table->timestamp('last_login')->nullable()->change();
             $table->integer('total_jobs_applied')->default(0)->change();
@@ -47,6 +46,9 @@ return new class extends Migration
             $table->timestamp('updated_at')->nullable()->change();
             $table->string('otp')->nullable()->change();
             $table->string('token')->nullable();
+            $table->string('password')->nullable();
+$table->json('skills')->default('[]')->change();
+            $table->boolean("doneprofile")->default(1);
             $table->timestamp('otp_expires_at')->nullable()->change();
         });
     }
