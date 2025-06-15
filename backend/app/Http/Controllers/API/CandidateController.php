@@ -117,11 +117,11 @@ class CandidateController extends Controller
             'job_title' => 'nullable|string|max:255',
             'skills' => 'nullable|string',
             'education' => 'nullable|string|max:255',
-            'experience' => 'nullable|string|in:0-2,3-5,6-10,10+',
+            'experience' => 'nullable|string|in:0-2,3-5,6-10,10+,any',
             'active' => 'nullable|boolean',
             'location' => 'nullable|string|max:255',
         ]);
-
+    
         if ($validator->fails()) {
             Log::error('Validation failed', ['errors' => $validator->errors()]);
             return response()->json([
@@ -129,64 +129,78 @@ class CandidateController extends Controller
                 'messages' => $validator->errors(),
             ], 422);
         }
-
+    
         // Build the query
         $query = Candidate::query()
             ->with(['educations', 'experiences', 'skills', 'languages'])
             ->select('candidates.*');
-
+    
         // Check if any filter parameters are provided
         $hasFilters = $request->hasAny(['job_title', 'skills', 'education', 'experience', 'active', 'location']);
-
+    
         if ($hasFilters) {
-
+            // Keyword-based search
             if ($keywords = $request->query('keywords')) {
-                $keywordArray = array_map('trim', explode(' ', $keywords)); // Split keywords by space
+                $keywordArray = array_map('trim', explode(' ', $keywords));
                 $query->where(function ($q) use ($keywordArray) {
                     foreach ($keywordArray as $keyword) {
-                        $q->orWhere('job_title', 'like', '%' . $keyword . '%')
-                          ->orWhere('city', 'like', '%' . $keyword . '%')
+                        $q->orWhereRaw('LOWER(job_title) LIKE ?', ['%' . strtolower($keyword) . '%'])
+                          ->orWhereRaw('LOWER(city) LIKE ?', ['%' . strtolower($keyword) . '%'])
                           ->orWhereHas('skills', function ($q) use ($keyword) {
-                              $q->where('skill_name', 'like', '%' . $keyword . '%');
+                              $q->whereRaw('LOWER(skill_name) LIKE ?', ['%' . strtolower($keyword) . '%']);
                           })
                           ->orWhereHas('educations', function ($q) use ($keyword) {
-                              $q->where('degree', 'like', '%' . $keyword . '%')
-                                ->orWhere('specialization', 'like', '%' . $keyword . '%');
+                              $q->whereRaw('LOWER(degree) LIKE ?', ['%' . strtolower($keyword) . '%'])
+                                ->orWhereRaw('LOWER(specialization) LIKE ?', ['%' . strtolower($keyword) . '%']);
                           })
                           ->orWhereHas('experiences', function ($q) use ($keyword) {
-                              $q->where('job_title', 'like', '%' . $keyword . '%')
+                              $q->whereRaw('LOWER(job_title) LIKE ?', ['%' . strtolower($keyword) . '%'])
                                 ->orWhere('experience_years', 'like', '%' . $keyword . '%');
                           });
                     }
                 });
             }
-
-            
-            // Filter by job title (from CandidateExperience or direct attribute)
+    
+            // Filter by job title (from Candidate or CandidateExperience)
             if ($jobTitle = $request->query('job_title')) {
-                $query->where('job_title', 'like', '%' . $jobTitle . '%');
+                $query->where(function ($q) use ($jobTitle) {
+                    $q->whereRaw('LOWER(job_title) LIKE ?', ['%' . strtolower($jobTitle) . '%'])
+                      ->orWhereHas('experiences', function ($q) use ($jobTitle) {
+                          $q->whereRaw('LOWER(job_title) LIKE ?', ['%' . strtolower($jobTitle) . '%']);
+                      });
+                });
             }
+    
             // Filter by skills (from CandidateSkill)
-             if ($skills = $request->query('skills')) {
+            if ($skills = $request->query('skills')) {
                 $skillArray = array_map('trim', explode(',', $skills));
                 $query->whereHas('skills', function ($q) use ($skillArray) {
                     $q->whereIn(DB::raw('LOWER(skill_name)'), array_map('strtolower', $skillArray));
                 });
-                 }
-
-
+            }
+    
             // Filter by education level (from CandidateEducation or direct attribute)
             if ($education = $request->query('education')) {
-                $query->where(function ($q) use ($education) {
-                    $q->where('degree', $education)
-                      ->orWhereHas('educations', function ($q) use ($education) {
-                          $q->where('degree', $education);
+                $educationLevels = [
+                    'graduate' => ['B.Com', 'B.Tech', 'BCA', 'BA', 'B.Sc', 'BBA', 'BE', 'B.Ed'],
+                    'post-graduate' => ['M.Com', 'M.Tech', 'MCA', 'MA', 'M.Sc', 'MBA', 'ME', 'M.Ed'],
+                    '10th' => ['10th', 'SSC', 'Matriculation', 'High School'],
+                    '12th' => ['12th', 'HSC', 'Intermediate', 'Senior Secondary'],
+                    'iti' => ['ITI', 'ITI Electrician', 'ITI Fitter', 'ITI Welder', 'ITI Mechanic'],
+                ];
+            
+                $degrees = $educationLevels[strtolower($education)] ?? [$education];
+                $query->where(function ($q) use ($degrees) {
+                    $q->whereIn(DB::raw('LOWER(degree)'), array_map('strtolower', $degrees))
+                      ->orWhereHas('educations', function ($q) use ($degrees) {
+                          $q->whereIn(DB::raw('LOWER(degree)'), array_map('strtolower', $degrees));
                       });
                 });
             }
-
+    
             // Filter by experience (from CandidateExperience or direct attribute)
-            if ($experience = $request->query('experience')) {
+            $experience = $request->query('experience');
+            if ($experience && $experience !== 'any') {
                 $ranges = [
                     '0-2' => [0, 2],
                     '3-5' => [3, 5],
@@ -201,24 +215,31 @@ class CandidateController extends Controller
                       });
                 });
             }
-
+    
             // Filter by active status
             if ($request->has('active')) {
                 $query->where('active_user', $request->query('active'));
             }
-
+    
             // Filter by location (city)
             if ($location = $request->query('location')) {
-                $query->where('city', 'like', '%' . $location . '%');
+                $query->whereRaw('LOWER(city) LIKE ?', ['%' . strtolower($location) . '%']);
             }
         }
-
+    
         // Default sorting to ensure consistent order
         $query->orderBy('full_name', 'asc');
-
+    
+        // Log matched candidates before pagination
+        $matchedCandidates = $query->count();
+        Log::info('Candidates matched before pagination', [
+            'filters' => $request->all(),
+            'matched_count' => $matchedCandidates,
+        ]);
+    
         // Paginate results (limit to 10 per page)
-        $candidates = $query->paginate(10);
-
+        $candidates = $query->paginate($request->query('per_page', 10));
+    
         // Transform response to include relevant data
         $candidates->getCollection()->transform(function ($candidate) {
             // Debug relationships
@@ -230,62 +251,58 @@ class CandidateController extends Controller
                 'has_educations' => !is_null($candidate->educations),
                 'has_languages' => !is_null($candidate->languages),
             ]);
-
+    
             return [
-            
-   
-
                 'id' => $candidate->id,
-        'full_name' => $candidate->full_name,
-        'dob' => $candidate->dob,
-        'gender' => $candidate->gender,
-        'email' => $candidate->email,
-        'number' => $candidate->number,
-        'address' => $candidate->address,
-        'city' => $candidate->city,
-        'state' => $candidate->state,
-        'prefers_night_shift' => $candidate->prefers_night_shift,
-        'prefers_day_shift' => $candidate->prefers_day_shift,
-        'work_from_home' => $candidate->work_from_home,
-        'work_from_office' => $candidate->work_from_office,
-        'field_job' => $candidate->field_job,
-        'employment_type' => $candidate->employment_type,
-        'resume' => $candidate->resume,
-        'active_user' => (bool) $candidate->active_user,
-        'last_login' => $candidate->last_login,
-        'total_jobs_applied' => $candidate->total_jobs_applied,
-        'total_job_views' => $candidate->total_job_views,
-        'otp' => $candidate->otp,
-        'otp_expires_at' => $candidate->otp_expires_at,
-        'preferred_language' => $candidate->preferred_language,
-        'token' => $candidate->token,
-
-        // From education relationship or main table
-        'degree' => $candidate->degree ?? optional($candidate->educations->first())->degree,
-        'specialization' => $candidate->specialization ?? optional($candidate->educations->first())->specialization,
-        'college_name' => $candidate->college_name ?? optional($candidate->educations->first())->college_name,
-        'passing_marks' => $candidate->passing_marks ?? optional($candidate->educations->first())->passing_marks,
-        'pursuing' => $candidate->pursuing ?? optional($candidate->educations->first())->pursuing,
-
-        // From experience relationship or main table
-        'experience_years' => $candidate->experience_years ?? optional($candidate->experiences->first())->experience_years,
-        'experience_months' => $candidate->experience_months ?? optional($candidate->experiences->first())->experience_months,
-        'job_title' => $candidate->job_title ?? optional($candidate->experiences->first())->job_title,
-        'job_roles' => $candidate->job_roles ?? optional($candidate->experiences->first())->job_roles,
-        'company_name' => $candidate->company_name ?? optional($candidate->experiences->first())->company_name,
-        'current_salary' => $candidate->current_salary ?? optional($candidate->experiences->first())->current_salary,
-        'start_date' => $candidate->start_date ?? optional($candidate->experiences->first())->start_date,
-            'skills' => explode(',', $candidate->skills),
-
-    ];
+                'full_name' => $candidate->full_name,
+                'dob' => $candidate->dob,
+                'gender' => $candidate->gender,
+                'email' => $candidate->email,
+                'number' => $candidate->number,
+                'address' => $candidate->address,
+                'city' => $candidate->city,
+                'state' => $candidate->state,
+                'prefers_night_shift' => $candidate->prefers_night_shift,
+                'prefers_day_shift' => $candidate->prefers_day_shift,
+                'work_from_home' => $candidate->work_from_home,
+                'work_from_office' => $candidate->work_from_office,
+                'field_job' => $candidate->field_job,
+                'employment_type' => $candidate->employment_type,
+                'resume' => $candidate->resume,
+                'active_user' => (bool) $candidate->active_user,
+                'last_login' => $candidate->last_login,
+                'total_jobs_applied' => $candidate->total_jobs_applied,
+                'total_job_views' => $candidate->total_job_views,
+                'otp' => $candidate->otp,
+                'otp_expires_at' => $candidate->otp_expires_at,
+                'preferred_language' => $candidate->preferred_language,
+                'token' => $candidate->token,
+    
+                // From education relationship or main table
+                'degree' => $candidate->degree ?? optional($candidate->educations->first())->degree,
+                'specialization' => $candidate->specialization ?? optional($candidate->educations->first())->specialization,
+                'college_name' => $candidate->college_name ?? optional($candidate->educations->first())->college_name,
+                'passing_marks' => $candidate->passing_marks ?? optional($candidate->educations->first())->passing_marks,
+                'pursuing' => $candidate->pursuing ?? optional($candidate->educations->first())->pursuing,
+    
+                // From experience relationship or main table
+                'experience_years' => $candidate->experience_years ?? optional($candidate->experiences->first())->experience_years,
+                'experience_months' => $candidate->experience_months ?? optional($candidate->experiences->first())->experience_months,
+                'job_title' => $candidate->job_title ?? optional($candidate->experiences->first())->job_title,
+                'job_roles' => $candidate->job_roles ?? optional($candidate->experiences->first())->job_roles,
+                'company_name' => $candidate->company_name ?? optional($candidate->experiences->first())->company_name,
+                'current_salary' => $candidate->current_salary ?? optional($candidate->experiences->first())->current_salary,
+                'start_date' => $candidate->start_date ?? optional($candidate->experiences->first())->start_date,
+                'skills' => explode(',', $candidate->skills),
+            ];
         });
-
+    
         Log::info('Candidates fetched', [
             'filters' => $request->all(),
             'count' => $candidates->total(),
             'page' => $candidates->currentPage(),
         ]);
-
+    
         return response()->json([
             'data' => $candidates->items(),
             'pagination' => [
