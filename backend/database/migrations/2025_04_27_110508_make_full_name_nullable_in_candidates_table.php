@@ -47,7 +47,7 @@ return new class extends Migration
             $table->string('otp')->nullable()->change();
             $table->string('token')->nullable();
             $table->string('password')->nullable();
-$table->json('skills')->default('[]')->change();
+        $table->json('skills')->default('[]')->change();
             $table->boolean("doneprofile")->default(1);
             $table->timestamp('otp_expires_at')->nullable()->change();
         });
