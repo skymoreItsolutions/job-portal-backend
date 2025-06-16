@@ -57,10 +57,10 @@ class Candidate extends Model
         return $this->hasMany(CandidateExperience::class);
     }
 
-    // public function skills()
-    // {
-    //     return $this->hasMany(CandidateSkill::class);
-    // }
+    public function skills()
+    {
+        return $this->hasMany(CandidateSkill::class);
+    }
 
     public function languages()
     {
