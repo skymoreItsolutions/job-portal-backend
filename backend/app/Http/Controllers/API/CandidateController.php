@@ -293,7 +293,9 @@ class CandidateController extends Controller
                 'company_name' => $candidate->company_name ?? optional($candidate->experiences->first())->company_name,
                 'current_salary' => $candidate->current_salary ?? optional($candidate->experiences->first())->current_salary,
                 'start_date' => $candidate->start_date ?? optional($candidate->experiences->first())->start_date,
-                'skills' => explode(',', $candidate->skills),
+    
+                // Fixed skills transformation
+                'skills' => $candidate->skills,
             ];
         });
     
@@ -315,7 +317,5 @@ class CandidateController extends Controller
             ],
         ], 200);
     }
- 
-
   
 }
