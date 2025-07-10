@@ -160,13 +160,7 @@ if ($request->filled('job_type')) {
         ]);
     }
 
-    /**
-     * Apply filters to the job posting query.
-     *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @param Request $request
-     * @return void
-     */
+    
 private function applyFilters($query, Request $request): void
 {
     if ($request->has('job_type')) {
