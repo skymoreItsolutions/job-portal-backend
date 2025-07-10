@@ -10,6 +10,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Mail;
 
 use App\Mail\JobPostingMail;
+use Carbon\Carbon;
 
 class JobPostController extends Controller
 {
@@ -108,30 +109,49 @@ class JobPostController extends Controller
 
  public function index(Request $request): JsonResponse
  {
-        // Validate incoming request
-        $validator = Validator::make($request->all(), [
-            'job_type' => 'string|in:full-time,part-time,contract,internship',
-            'location' => 'string|max:255',
-            'work_location_type' => 'string|in:remote,on-site,hybrid',
-            'pay_type' => 'string|in:hourly,salary,commission',
-            'is_walkin_interview' => 'boolean',
-            'total_experience_required' => 'numeric|min:0',
-        ]);
+       
+          $query = JobPosting::query();
 
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => 'error',
-                'errors' => $validator->errors()
-            ], 422);
-        }
+if ($request->filled('job_title')) {
+            $query->where('job_title', 'like', '%' . $request->job_title . '%');
+ 
+}
 
-        // Build query
-        $query = JobPosting::query();
+if ($request->filled('total_experience_required')) {
+    $exp = array_map('trim', explode(',', $request->total_experience_required));
+    $query->whereIn('total_experience_required', $exp);
+}
 
-        // Apply filters
-        $this->applyFilters($query, $request);
+if ($request->filled('work_location_type')) {
+    $locations = array_map('trim', explode(',', $request->work_location_type));
+    $query->whereIn('work_location_type', $locations);
+}
 
-        // Paginate results
+if ($request->filled('categories')) {
+    $categories = array_map('trim', explode(',', $request->categories));
+    $query->whereIn('category', $categories);
+}
+
+if ($request->filled('job_type')) {
+    $types = array_map('trim', explode(',', $request->job_type));
+    $query->whereIn('job_type', $types);
+}
+ if ($request->has('date_posted')) {
+    switch ($request->date_posted) {
+        case 'last_3_days':
+            $query->where('created_at', '>=', Carbon::now()->subDays(3));
+            break;
+        case 'last_10_days':
+            $query->where('created_at', '>=', Carbon::now()->subDays(10));
+            break;
+        case 'last_30_days':
+            $query->where('created_at', '>=', Carbon::now()->subDays(30));
+            break;
+    }
+}
+
+        
+    //     // Paginate results
         $jobs = $query->latest()->paginate(10);
 
         return response()->json([
