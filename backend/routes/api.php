@@ -48,9 +48,10 @@ Route::prefix('v1')->group(function () {
 
     Route::post('/add-companies', [EmployerAuthController::class, 'addCompany']);
     Route::get('/companies', [EmployerAuthController::class, 'listCompanies']);
-
+    Route::middleware('auth:employer-api')->post('employer/update', [EmployerAuthController::class, 'updateEmployer']);
     Route::middleware('auth:employer-api')->get('employer/profile', [EmployerAuthController::class, 'profile']);
 });
+
 
 Route::post("v1/updatecandidate/{token}",[AllCandidateController::class,"AddCandidateInfo"]);
 Route::get("v1/candidateinfo/{token}",[AllCandidateController::class,"getCandidateinfo"]);

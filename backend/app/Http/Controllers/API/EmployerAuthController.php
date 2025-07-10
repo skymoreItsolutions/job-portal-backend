@@ -219,6 +219,80 @@ public function addCompany(Request $request)
              'data' => $companies,
          ], 200);
      }
+
+       public function updateEmployer(Request $request)
+    {
+        // Get the authenticated employer
+        $employer = Auth::guard('employer-api')->user();
+
+        if (!$employer) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized',
+            ], 401);
+        }
+
+        // Validate the request
+        $validator = Validator::make($request->all(), [
+            'name' => 'sometimes|string|max:255',
+            'company_name' => 'sometimes|string|max:255',
+            'company_location' => 'sometimes|string|max:255',
+            'contact_person' => 'sometimes|string|max:255',
+            'contact_phone' => 'sometimes|string|max:20',
+            'gst_number' => 'sometimes|string|max:15',
+            'gst_certificate' => 'sometimes|file|mimes:pdf|max:2048', // PDF, max 2MB
+            'company_pan_card' => 'sometimes|file|mimes:pdf|max:2048', // PDF, max 2MB
+            'password' => 'sometimes|string|min:6',
+        ], [
+            'gst_certificate.mimes' => 'The GST certificate must be a PDF file.',
+            'company_pan_card.mimes' => 'The company PAN card must be a PDF file.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        // Handle file uploads
+        $gstCertificatePath = $employer->gst_certificate;
+        $companyPanCardPath = $employer->company_pan_card;
+
+        if ($request->hasFile('gst_certificate') && $request->file('gst_certificate')->isValid()) {
+            $filename = 'gst_' . time() . '_' . $request->file('gst_certificate')->getClientOriginalName();
+            $gstCertificatePath = $request->file('gst_certificate')->storeAs('documents', $filename, 'public');
+        }
+
+        if ($request->hasFile('company_pan_card') && $request->file('company_pan_card')->isValid()) {
+            $filename = 'pan_' . time() . '_' . $request->file('company_pan_card')->getClientOriginalName();
+            $companyPanCardPath = $request->file('company_pan_card')->storeAs('documents', $filename, 'public');
+        }
+
+        // Prepare data for update
+        $updateData = [
+            'name' => $request->input('name', $employer->name),
+            'company_name' => $request->input('company_name', $employer->company_name),
+            'company_location' => $request->input('company_location', $employer->company_location),
+            'contact_person' => $request->input('contact_person', $employer->contact_person),
+            'contact_phone' => $request->input('contact_phone', $employer->contact_phone),
+            'gst_number' => $request->input('gst_number', $employer->gst_number),
+            'gst_certificate' => $gstCertificatePath,
+            'company_pan_card' => $companyPanCardPath,
+        ];
+
+        // Update password if provided
+        if ($request->has('password')) {
+            $updateData['password'] = Hash::make($request->password);
+        }
+
+        // Update employer record
+        $employer->update($updateData);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Employer profile updated successfully',
+            'data' => $employer->fresh(), // Retrieve fresh instance to include updated data
+        ], 200);
+    }
+
  
      /**
       * Admin approves or rejects a company
