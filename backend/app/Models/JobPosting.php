@@ -29,12 +29,24 @@ class JobPosting extends Model
         'degree_specialization',
         'job_expire_time',
         'number_of_candidates_required',
-        'is_verified'
+        'is_verified',
+        'english_level', // Add for englishLevel
+    'gender_preference', // Add for genderPreference
+    'perks', // Add for perks (as JSON)
+    'interview_location', // Add for interviewLocation
+    'contact_email', // Add for contactEmail
+    'contact_phone', // Add for contactPhone
+    'interview_date', // Add for interviewDate
+    'interview_time', // Add for interviewTime
+    'not_email', // Add for notEmail
+    'viewed_number', // Add for viewedNumber
+        
     ];
 
    protected $casts = [
         'additional_requirements' => 'array',
         'other_job_titles' => 'array',
+        'perks' => 'array', // Add for perks
         'degree_specialization' => 'array',
         'joining_fee' => 'boolean',
         'is_walkin_interview' => 'boolean',
