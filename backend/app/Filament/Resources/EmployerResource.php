@@ -57,12 +57,7 @@ class EmployerResource extends Resource
         return $table
          ->defaultSort('id', 'desc')
             ->columns([
-              TextColumn::make('serial')
-    ->label('S.No')
-    ->state(
-        fn ($record, $livewire) =>
-            ($livewire->getTableRecordsPerPage() * ($livewire->getTablePage() - 1)) + $livewire->getTableRecords()->search(fn ($r) => $r->getKey() === $record->getKey()) + 1
-    ),
+
                   ToggleColumn::make('is_verified')
                 ->label('Verified')
                 ->sortable()
@@ -78,11 +73,12 @@ class EmployerResource extends Resource
                 ->offColor('success')
                 ->afterStateUpdated(function ($record, $state) {
                    }),
+                     TextColumn::make('name')->label('Employer Name')->sortable()->searchable(),
              
-                TextColumn::make('company_name')->sortable()->searchable(),
-                TextColumn::make('company_location')->sortable()->searchable(),
-                TextColumn::make('contact_email')->sortable()->searchable(),
-                TextColumn::make('contact_phone')->sortable()->searchable(),
+                TextColumn::make('companies.name')->label('Company Name')->sortable()->searchable(),
+                TextColumn::make('companies.company_location')->label('Company Location')->sortable()->searchable(),
+                TextColumn::make('contact_email')->label('Email')->sortable()->searchable(),
+                TextColumn::make('companies.contact_phone')->label('Phone')->sortable()->searchable(),
               
             ])
             ->filters([

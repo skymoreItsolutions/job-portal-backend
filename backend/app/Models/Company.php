@@ -19,6 +19,7 @@ class Company extends Model
         'company_location',
         'contact_person',
         'contact_phone',
+        'gst_number',
     ];
 
     protected $casts = [

@@ -33,7 +33,7 @@ Route::prefix('v1')->group(function () {
     Route::post('verify-otp', [AuthController::class, 'verifyOtp']);
 
 
-    Route::post('job-posts', [JobPostController::class, 'store']);
+
 
     Route::post('employer/signup', [EmployerAuthController::class, 'signup']);
     Route::post('employer/send-otp', [EmployerAuthController::class, 'sendOtp']);
@@ -45,11 +45,12 @@ Route::prefix('v1')->group(function () {
     Route::get('/jobs/employer/{id}', [JobPostController::class, 'getByEmployer']);
 
     Route::get('/jobs', [JobPostController::class, 'index']);
-
+Route::get('/job-titles', [JobPostController::class, 'getJobTitles']);
     Route::post('/add-companies', [EmployerAuthController::class, 'addCompany']);
     Route::get('/companies', [EmployerAuthController::class, 'listCompanies']);
-    Route::middleware('auth:employer-api')->post('employer/update', [EmployerAuthController::class, 'updateEmployer']);
-    Route::middleware('auth:employer-api')->get('employer/profile', [EmployerAuthController::class, 'profile']);
+    Route::middleware('auth:sanctum')->post('employer/update', [EmployerAuthController::class, 'updateEmployer']);
+    Route::middleware('auth:sanctum')->get('employer/profile', [EmployerAuthController::class, 'profile']);
+Route::middleware('auth:employer-api')->post('job-posts', [JobPostController::class, 'store']);
 });
 
 

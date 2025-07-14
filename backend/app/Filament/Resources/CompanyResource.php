@@ -101,32 +101,13 @@ class CompanyResource extends Resource
                     ->label('Contact Phone')
                     ->sortable()
                     ->searchable(),
-                Tables\Columns\TextColumn::make('gst_certificate')
-                    ->label('GST Certificate')
-                    ->formatStateUsing(fn ($state) => $state ? 'Available' : 'N/A')
-                    ->action(
-                        Tables\Actions\Action::make('download_gst')
-                            ->label('Download')
-                            ->icon('heroicon-o-arrow-down-tray')
-                            ->color('primary')
-                            ->url(fn ($record) => Storage::disk('public')->url($record->gst_certificate))
-                            ->openUrlInNewTab()
-                            ->visible(fn ($record) => $record->gst_certificate && Storage::disk('public')->exists($record->gst_certificate))
-                            ->extraAttributes(['download' => true])
-                    ),
-                Tables\Columns\TextColumn::make('other_certificate')
-                    ->label('Other Certificate')
-                    ->formatStateUsing(fn ($state) => $state ? 'Available' : 'N/A')
-                    ->action(
-                        Tables\Actions\Action::make('download_other')
-                            ->label('Download')
-                            ->icon('heroicon-o-arrow-down-tray')
-                            ->color('primary')
-                            ->url(fn ($record) => Storage::disk('public')->url($record->other_certificate))
-                            ->openUrlInNewTab()
-                            ->visible(fn ($record) => $record->other_certificate && Storage::disk('public')->exists($record->other_certificate))
-                            ->extraAttributes(['download' => true])
-                    ),
+                    Tables\Columns\TextColumn::make('gst_certificate')
+                ->label('GST Certificate')
+                ->formatStateUsing(fn ($state) => $state ? 'Available' : 'N/A'),
+            Tables\Columns\TextColumn::make('other_certificate')
+                ->label('Other Certificate')
+                ->formatStateUsing(fn ($state) => $state ? 'Available' : 'N/A'),
+    
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('is_approved')
@@ -137,6 +118,37 @@ class CompanyResource extends Resource
                     ]),
             ])
             ->actions([
+                Tables\Actions\Action::make('view_gst')
+                ->label('View GST Doc')
+                ->icon('heroicon-o-eye')
+                ->color('primary')
+                ->url(fn ($record) => $record->gst_certificate ? Storage::disk('public')->url($record->gst_certificate) : null)
+                ->openUrlInNewTab()
+                ->visible(fn ($record) => $record->gst_certificate && Storage::disk('public')->exists($record->gst_certificate)),
+            Tables\Actions\Action::make('download_gst')
+                ->label('Download GST')
+                ->icon('heroicon-o-arrow-down-tray')
+                ->color('primary')
+                ->url(fn ($record) => $record->gst_certificate ? Storage::disk('public')->url($record->gst_certificate) : null)
+                ->openUrlInNewTab()
+                ->extraAttributes(['download' => true])
+                ->visible(fn ($record) => $record->gst_certificate && Storage::disk('public')->exists($record->gst_certificate)),
+            Tables\Actions\Action::make('view_other')
+                ->label('View Other Doc')
+                ->icon('heroicon-o-eye')
+                ->color('primary')
+                ->url(fn ($record) => $record->other_certificate ? Storage::disk('public')->url($record->other_certificate) : null)
+                ->openUrlInNewTab()
+                ->visible(fn ($record) => $record->other_certificate && Storage::disk('public')->exists($record->other_certificate)),
+            Tables\Actions\Action::make('download_other')
+                ->label('Download Other')
+                ->icon('heroicon-o-arrow-down-tray')
+                ->color('primary')
+                ->url(fn ($record) => $record->other_certificate ? Storage::disk('public')->url($record->other_certificate) : null)
+                ->openUrlInNewTab()
+                ->extraAttributes(['download' => true])
+                ->visible(fn ($record) => $record->other_certificate && Storage::disk('public')->exists($record->other_certificate)),
+            
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([

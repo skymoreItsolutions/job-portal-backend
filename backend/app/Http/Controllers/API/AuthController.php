@@ -3,13 +3,16 @@
 namespace App\Http\Controllers\API;
 
 use App\Models\Candidate;
+use App\Models\OtpVerification;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 use App\Mail\SendOtpMail;
+
 class AuthController extends Controller
 {
     // Signup Route
@@ -29,91 +32,114 @@ class AuthController extends Controller
         return response()->json(['message' => 'Signup successful', 'user' => $candidate], 201);
     }
 
-      
     public function sendOtp(Request $request)
-{
-    // Validate the email input
-    $request->validate([
-        'email' => 'required|email',
-    ]);
+    {
+        // Validate the email input
+        $request->validate([
+            'email' => 'required|email',
+        ]);
 
-    // Generate a random OTP
-    $otp = rand(100000, 999999);
+        // Generate a random 6-digit OTP
+        $otp = rand(100000, 999999);
 
-    // Check if the candidate already exists
-    $candidate = Candidate::where('email', $request->email)->first();
+        // Check if an OTP record already exists
+        $otpRecord = OtpVerification::where('email', $request->email)->first();
 
-    if ($candidate) {
-        // If candidate exists, update the OTP and expiration time
-        $candidate->otp = $otp;
-        $candidate->otp_expires_at = Carbon::now()->addMinutes(10);
-        $candidate->save();
-    } else { 
-        // If candidate does not exist, create a new record
-        $candidate = new Candidate();
-        $candidate->email = $request->email;
-        $candidate->otp = $otp;
-        $candidate->otp_expires_at = Carbon::now()->addMinutes(10);
-        $candidate->save();
+        if ($otpRecord) {
+            // Update existing OTP record
+            $otpRecord->update([
+                'otp' => $otp,
+                'expires_at' => Carbon::now()->addMinutes(10),
+                'session_token' => null,
+                'session_token_expires_at' => null,
+            ]);
+        } else {
+            // Create new OTP record
+            OtpVerification::create([
+                'email' => $request->email,
+                'otp' => $otp,
+                'expires_at' => Carbon::now()->addMinutes(10),
+            ]);
+        }
+
+        try {
+            // Send OTP to the user's email
+            Mail::to($request->email)->send(new SendOtpMail($otp));
+        } catch (\Exception $e) {
+            // If sending mail fails, return an error response
+            return response()->json(["success" => false, 'message' => 'Failed to send OTP', 'error' => $e->getMessage()], 500);
+        }
+
+        // Return success response
+        return response()->json(["success" => true]);
     }
-
-    try {
-        // Send OTP to the user's email
-        Mail::to($request->email)->send(new SendOtpMail($otp));
-    } catch (\Exception $e) {
-        // If sending mail fails, return an error response
-        return response()->json(["success"=>false,'message' => 'Failed to send OTP', 'error' => $e->getMessage()], 500);
-    }
-
-    // Return the OTP as a response
-    return response()->json(["success" => true]);
-}
-
-
-
-    
-
-    
-
 
     public function verifyOtp(Request $request)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'email' => 'required|email',
-            'otp' => 'required|numeric',
+            'otp' => 'required|numeric|digits:6',
         ]);
 
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $otpRecord = OtpVerification::where('email', $request->email)
+            ->where('otp', $request->otp)
+            ->first();
+
+        if (!$otpRecord) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid OTP',
+            ], 400);
+        }
+
+        if (Carbon::now()->gt($otpRecord->expires_at)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'OTP has expired',
+            ], 400);
+        }
+
+        // Check if candidate exists
         $candidate = Candidate::where('email', $request->email)->first();
 
-        if ($candidate->otp != $request->otp) {
-            return response()->json(["success"=>false,'message' => 'Invalid OTP'], 401);
+        $response = [
+            'success' => true,
+            'message' => 'OTP verified successfully',
+            'email' => $request->email,
+        ];
+
+        // Only generate and return session token if candidate exists
+        if ($candidate) {
+            // Generate token using Sanctum
+            $token = $candidate->createToken('CandidateToken')->plainTextToken;
+            $otpRecord->update([
+                'token' => $token,
+                'session_token_expires_at' => Carbon::now()->addMinutes(30),
+            ]);
+
+            $candidate->update([
+                'last_login' => Carbon::now(),
+                'token' => $token,
+            ]);
+
+            $response['token'] = $token;
+            $response['user'] = $candidate;
+        } else {
+            // Handle case where candidate does not exist
+            $response['message'] = 'OTP verified, but no candidate found with this email';
         }
 
-        if (Carbon::now()->gt($candidate->otp_expires_at)) {
-            return response()->json(["success"=>false,'message' => 'OTP expired'], 401);
-        }
-
-        // clear otp after success login
-        $token = Str::random(60);
-        $candidate->otp = null;
-        $candidate->otp_expires_at = null;
-        $candidate->last_login = Carbon::now();
-        $candidate->token=$token;
-        $candidate->save();
-
-        // Generate simple token (you can use Sanctum or Passport for real app)
-        
-         
-        return response()->json([
-            "success"=>true,
-            'message' => 'Login successful',
-            'token' => $token,
-            'user' => $candidate
-        ]);
+        return response()->json($response);
     }
 
-
-      public function updateEmployer(Request $request)
+    public function updateEmployer(Request $request)
     {
         // Get the authenticated employer
         $employer = Auth::guard('employer-api')->user();
@@ -167,7 +193,7 @@ class AuthController extends Controller
             'contact_person' => $request->input('contact_person', $employer->contact_person),
             'contact_phone' => $request->input('contact_phone', $employer->contact_phone),
             'gst_number' => $request->input('gst_number', $employer->gst_number),
-            'gst_certificate' => $gstCertificatePath,
+            'Dgst_certificate' => $gstCertificatePath,
             'company_pan_card' => $companyPanCardPath,
         ];
 
@@ -185,5 +211,4 @@ class AuthController extends Controller
             'data' => $employer->fresh(), // Retrieve fresh instance to include updated data
         ], 200);
     }
-
 }

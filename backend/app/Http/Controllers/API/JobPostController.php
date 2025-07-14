@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Models\Company;
 use App\Mail\JobPostingMail;
 use Carbon\Carbon;
-
+use Illuminate\Support\Facades\Auth;
 class JobPostController extends Controller
 {
     
@@ -37,7 +37,7 @@ class JobPostController extends Controller
             'additional_requirements' => 'nullable|json',
             'is_walkin_interview' => 'boolean',
             'joining_fee' => 'required|boolean',
-            'communication_preference' => 'required|in:Call,Whatsapp,No Preference',
+            'communication_preference' => 'required|in:call,email,whatsapp,phone,No Preference',
             'total_experience_required' => 'nullable|integer|min:0',
             'total_experience_max' => 'nullable|integer|min:0',
             'other_job_titles' => 'nullable|json',
@@ -84,12 +84,13 @@ class JobPostController extends Controller
         }
 
         try {
-            // Get the authenticated employer
+           
             $employer = Auth::guard('employer-api')->user();
+            
             if (!$employer) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Unauthorized',
+                    'message' => $employer,
                 ], 401);
             }
 
@@ -137,6 +138,7 @@ class JobPostController extends Controller
                     return response()->json([
                         'status' => 'error',
                         'message' => 'Invalid or unauthorized company.',
+                         'check' => $request->company_id,
                     ], 422);
                 }
                 $company_id = $company->id;
@@ -181,7 +183,7 @@ class JobPostController extends Controller
 
             // Send job posting email
             try {
-                Mail::to('manshu.developer@gmail.com')->send(new JobPostingMail($JobPosting));
+             //   Mail::to('manshu.developer@gmail.com')->send(new JobPostingMail($JobPosting));
             } catch (\Exception $e) {
                 Log::error('Failed to send job posting email: ' . $e->getMessage());
             }
@@ -264,6 +266,27 @@ if ($request->filled('job_type')) {
         ]);
     }
 
+    
+public function getJobTitles(Request $request): JsonResponse
+    {
+        $search = $request->query('search', '');
+        $limit = 20; // Default limit of 20 job titles
+
+        $jobTitles = JobPosting::query()
+            ->when($search, function ($query, $search) {
+                return $query->where('job_title', 'like', '%' . $search . '%');
+            }, function ($query) use ($limit) {
+                return $query->distinct()->take($limit);
+            })
+            ->distinct()
+            ->pluck('job_title')
+            ->values();
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $jobTitles
+        ]);
+    }
     
 private function applyFilters($query, Request $request): void
 {

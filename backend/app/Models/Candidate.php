@@ -10,11 +10,11 @@ use App\Models\CandidateSkill;
 use App\Models\CandidateLanguage;
 
 
-
+use Laravel\Sanctum\HasApiTokens;
 class Candidate extends Model
 {
-    use HasFactory;
 
+       use HasFactory,HasApiTokens;
     protected $table = 'candidates';
 
     protected $fillable = [

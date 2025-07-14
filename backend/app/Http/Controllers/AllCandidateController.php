@@ -12,59 +12,71 @@ class AllCandidateController extends Controller
 {
     //
 
- public function AddCandidateInfo(Request $request,$token){
-$candidate=Candidate::whereToken($token)->first();
 
-$candidate->full_name=$request->full_name ?? $candidate->full_name;
-$candidate->number=$request->number ?? $candidate->number;
-$candidate->dob=$request->dob ?? $candidate->dob;
-$candidate->gender=$request->gender ?? $candidate->gender;
-$candidate->email=$request->email ?? $candidate->email;
-$candidate->address=$request->address ?? $candidate->address;
-$candidate->city=$request->city ?? $candidate->city;
-$candidate->state=$request->state ?? $candidate->state;
-$candidate->degree=$request->degree ?? $candidate->degree;
-$candidate->specialization=$request->specialization ?? $candidate->specialization;
-$candidate->college_name=$request->college_name ?? $candidate->college_name;
-$candidate->passing_marks=$request->passing_marks ?? $candidate->passing_marks;
-$candidate->pursuing=$request->pursuing ?? $candidate->pursuing;
-$candidate->experience_years=$request->experience_years ?? $candidate->experience_years;
-$candidate->experience_months=$request->experience_months ?? $candidate->experience_months;
-$candidate->job_title=$request->job_title ?? $candidate->job_title;
-$candidate->job_roles=$request->job_roles ?? $candidate->job_roles;
-$candidate->company_name=$request->company_name ?? $candidate->company_name;
-$candidate->current_salary=$request->current_salary ?? $candidate->current_salary;
-$candidate->start_date=$request->start_date ?? $candidate->start_date;
-$candidate->prefers_night_shift=$request->prefers_night_shift ?? $candidate->prefers_night_shift;
-$candidate->prefers_day_shift=$request->prefers_day_shift ?? $candidate->prefers_day_shift;
-$candidate->work_from_home=$request->work_from_home ?? $candidate->work_from_home;
-$candidate->work_from_office=$request->work_from_office ?? $candidate->work_from_office;
-$candidate->skills=$request->skills ?? $candidate->skills;
-$candidate->preferred_language=$request->preferred_language ?? $candidate->preferred_language;
-$candidate->password= Hash::make( $request->password) ?? $candidate->password;
-$candidate->doneprofile=1;
-$path =null;
-if($request->hasFile("resume")){
-    if($candidate->resume){
-        Storage::disk("public")->delete($candidate->resume);
+    public function AddCandidateInfo(Request $request, $token) {
+    // Find the candidate by token
+    $candidate = Candidate::whereToken($token)->first();
+
+    // Check if candidate exists
+    if (!$candidate) {
+        return response()->json([
+            "success" => false,
+            "message" => "Candidate not found for the provided token"
+        ], 404);
     }
-       $path = $request->file('resume')->store('pdf',"public");
 
-    // 
+    // Update candidate properties
+    $candidate->full_name = $request->full_name ?? $candidate->full_name;
+    $candidate->number = $request->number ?? $candidate->number;
+    $candidate->dob = $request->dob ?? $candidate->dob;
+    $candidate->gender = $request->gender ?? $candidate->gender;
+    $candidate->email = $request->email ?? $candidate->email;
+    $candidate->address = $request->address ?? $candidate->address;
+    $candidate->city = $request->city ?? $candidate->city;
+    $candidate->state = $request->state ?? $candidate->state;
+    $candidate->degree = $request->degree ?? $candidate->degree;
+    $candidate->specialization = $request->specialization ?? $candidate->specialization;
+    $candidate->college_name = $request->college_name ?? $candidate->college_name;
+    $candidate->passing_marks = $request->passing_marks ?? $candidate->passing_marks;
+    $candidate->pursuing = $request->pursuing ?? $candidate->pursuing;
+    $candidate->experience_years = $request->experience_years ?? $candidate->experience_years;
+    $candidate->experience_months = $request->experience_months ?? $candidate->experience_months;
+    $candidate->job_title = $request->job_title ?? $candidate->job_title;
+    $candidate->job_roles = $request->job_roles ?? $candidate->job_roles;
+    $candidate->company_name = $request->company_name ?? $candidate->company_name;
+    $candidate->current_salary = $request->current_salary ?? $candidate->current_salary;
+    $candidate->start_date = $request->start_date ?? $candidate->start_date;
+    $candidate->prefers_night_shift = $request->prefers_night_shift ?? $candidate->prefers_night_shift;
+    $candidate->prefers_day_shift = $request->prefers_day_shift ?? $candidate->prefers_day_shift;
+    $candidate->work_from_home = $request->work_from_home ?? $candidate->work_from_home;
+    $candidate->work_from_office = $request->work_from_office ?? $candidate->work_from_office;
+    $candidate->skills = $request->skills ?? $candidate->skills;
+    $candidate->preferred_language = $request->preferred_language ?? $candidate->preferred_language;
+    $candidate->password = $request->password ? Hash::make($request->password) : $candidate->password;
+    $candidate->doneprofile = 1;
+
+    // Handle resume file upload
+    $path = null;
+    if ($request->hasFile("resume")) {
+        // Delete old resume if it exists
+        if ($candidate->resume) {
+            Storage::disk("public")->delete($candidate->resume);
+        }
+        // Store new resume
+        $path = $request->file('resume')->store('pdf', "public");
+    }
+    $candidate->resume = $path ?? $candidate->resume; // Keep old resume if no new file uploaded
+
+    // Save the candidate
+    $candidate->save();
+
+    return response()->json([
+        "success" => true,
+        "message" => "Candidate profile updated successfully",
+        "path" => $path
+    ]);
 }
-$candidate->resume=$path;
 
-$candidate->save();
-
-
-return response()->json(["success"=>true,"message"=>"updated","path"=>$path]);
-
-
-
-
-
-
- }
 
  public function getCandidateinfo($token){
 $candidate=Candidate::whereToken($token)->first();
