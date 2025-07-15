@@ -44,6 +44,10 @@ return [
         'driver' => 'sanctum',
         'provider' => 'employers',
     ],
+    'candidate-api' => [
+    'driver' => 'sanctum',
+    'provider' => 'candidates',
+],
     'api' => [
         'driver' => 'sanctum',
         'provider' => 'employers', // Or your provider
@@ -77,6 +81,14 @@ return [
         'driver' => 'eloquent',
         'model' => App\Models\Employer::class,
     ],
+
+    'candidates' => [
+    'driver' => 'eloquent',
+    'model' => App\Models\Candidate::class,
+],
+
+
+
 
         // 'users' => [
         //     'driver' => 'database',

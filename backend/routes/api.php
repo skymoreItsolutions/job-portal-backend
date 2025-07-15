@@ -22,37 +22,33 @@ use App\Http\Controllers\API\EmployerAuthController;
 
 Route::prefix('v1')->group(function () {
     Route::apiResource('candidate', CandidateController::class);
+    Route::get('/candidateprofile', [AuthController::class, 'profile']);
+
     Route::apiResource('candidate/lan', CandidateLanguageController::class);
     Route::apiResource('candidate/skills', CandidateSkillController::class);
     Route::apiResource('candidate/exp', CandidateExperienceController::class);
     Route::apiResource('candidate/edu', CandidateEducationController::class);
     Route::get('/filter', [CandidateController::class, 'filter']);
-
     Route::post('signup', [AuthController::class, 'signup']);
     Route::post('send-otp', [AuthController::class, 'sendOtp']);
     Route::post('verify-otp', [AuthController::class, 'verifyOtp']);
-
-
-
-
     Route::post('employer/signup', [EmployerAuthController::class, 'signup']);
     Route::post('employer/send-otp', [EmployerAuthController::class, 'sendOtp']);
-  
 
-//login
+
     Route::post('employer/verify-otp', [EmployerAuthController::class, 'verifyOtp']);
     Route::post('employer/login', [EmployerAuthController::class, 'login']);
     Route::get('/jobs/employer/{id}', [JobPostController::class, 'getByEmployer']);
-
     Route::get('/jobs', [JobPostController::class, 'index']);
-Route::get('/job-titles', [JobPostController::class, 'getJobTitles']);
+    Route::get('/job-titles', [JobPostController::class, 'getJobTitles']);
     Route::post('/add-companies', [EmployerAuthController::class, 'addCompany']);
     Route::get('/companies', [EmployerAuthController::class, 'listCompanies']);
     Route::middleware('auth:sanctum')->post('employer/update', [EmployerAuthController::class, 'updateEmployer']);
     Route::middleware('auth:sanctum')->get('employer/profile', [EmployerAuthController::class, 'profile']);
-Route::middleware('auth:employer-api')->post('job-posts', [JobPostController::class, 'store']);
+    Route::middleware('auth:employer-api')->post('job-posts', [JobPostController::class, 'store']);
 });
 
+Route::post("v1/createcandidate", [AllCandidateController::class, "CreateCandidate"]);
 
 Route::post("v1/updatecandidate/{token}",[AllCandidateController::class,"AddCandidateInfo"]);
 Route::get("v1/candidateinfo/{token}",[AllCandidateController::class,"getCandidateinfo"]);
