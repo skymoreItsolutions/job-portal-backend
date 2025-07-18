@@ -35,4 +35,14 @@ return [
         ],
     ],
 
+      'openai' => [
+        'api_key' => env('OPENAI_API_KEY'),
+        'assistant_id' => env('OPENAI_ASSISTANT_ID'),
+        'assistant_name' => env('OPENAI_ASSISTANT_NAME'),
+    ],
+
+    'together'=>[
+         'api_key' => env('together_API_KEY'),
+    ]
+
 ];

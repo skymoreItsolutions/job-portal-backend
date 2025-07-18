@@ -10,6 +10,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Mail;
 use App\Models\Company;
 use App\Mail\JobPostingMail;
+use App\Mail\NewCompanyRegistered;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 class JobPostController extends Controller
@@ -19,10 +20,10 @@ class JobPostController extends Controller
  public function store(Request $request): JsonResponse
     {
         // Define validation rules
-        $rules = [
+      $rules = [
             'employer_id' => 'required|exists:employers,id',
             'company_id' => 'nullable|exists:companies,id',
-            'newCompanyName' => 'nullable|string|max:255',
+            'company_name' => 'nullable|string|max:255',
             'pan_card' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
             'gst_certificate' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
             'job_title' => 'required|string|max:255',
@@ -31,15 +32,18 @@ class JobPostController extends Controller
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
             'work_location_type' => 'required|in:Work from Home,Work from Office,Hybrid',
-            'compensation' => 'required|string|max:255',
-            'pay_type' => 'required|in:Salary,Hourly,Per Project',
+            'compensation' => 'nullable|string|max:255', 
+            'min_salary' => 'required|numeric|min:0',
+            'max_salary' => 'nullable|numeric|min:0|gte:min_salary',
+            'incentive' => 'nullable|numeric|min:0',
+            'pay_type' => 'required|in:Salary,Salary + Incentive,Hourly,Per Project',
             'basic_requirements' => 'nullable|string',
             'additional_requirements' => 'nullable|json',
             'is_walkin_interview' => 'boolean',
             'joining_fee' => 'required|boolean',
-            'communication_preference' => 'required|in:call,email,whatsapp,phone,No Preference',
+            'communication_preference' => 'required|in:Whatsapp,Call,No Preference',
             'total_experience_required' => 'nullable|integer|min:0',
-            'total_experience_max' => 'nullable|integer|min:0',
+            'total_experience_max' => 'nullable|integer|min:0|gte:total_experience_required',
             'other_job_titles' => 'nullable|json',
             'degree_specialization' => 'nullable|json',
             'job_description' => 'nullable|string',
@@ -55,12 +59,22 @@ class JobPostController extends Controller
             'interview_time' => 'nullable|string',
             'not_email' => 'boolean',
             'viewed_number' => 'boolean',
+            'industry' => 'required|string',
+            'department' => 'required|string',
+            'job_role' => 'required|string|max:255',
         ];
 
+
         // Custom validation messages
-        $messages = [
+         $messages = [
             'gst_certificate.mimes' => 'The GST certificate must be a PDF, JPG, JPEG, or PNG file.',
             'pan_card.mimes' => 'The PAN card must be a PDF, JPG, JPEG, or PNG file.',
+            'industry.required' => 'The industry field is required.',
+            'department.required' => 'The department field is required.',
+            'job_role.required' => 'The job role field is required.',
+            'min_salary.required' => 'The minimum salary is required.',
+            'max_salary.gte' => 'The maximum salary must be greater than or equal to the minimum salary.',
+            'incentive.numeric' => 'The incentive must be a valid number.',
         ];
 
         // Validate the request
@@ -146,7 +160,7 @@ class JobPostController extends Controller
 
             // Create the job post
             $JobPosting = JobPosting::create([
-                'employer_id' => $request->employer_id,
+               'employer_id' => $request->employer_id,
                 'company_id' => $company_id,
                 'job_title' => $request->job_title,
                 'job_type' => $request->job_type,
@@ -154,9 +168,11 @@ class JobPostController extends Controller
                 'latitude' => $request->latitude,
                 'longitude' => $request->longitude,
                 'work_location_type' => $request->work_location_type,
-                'compensation' => $request->compensation,
+                'compensation' => $request->compensation, // Optional: Keep for backward compatibility
+                'min_salary' => $request->min_salary,
+                'max_salary' => $request->max_salary,
+                'incentive' => $request->incentive,
                 'pay_type' => $request->pay_type,
-                'joining_fee' => $request->joining_fee ?? false,
                 'basic_requirements' => $request->basic_requirements,
                 'additional_requirements' => $request->additional_requirements,
                 'is_walkin_interview' => $request->is_walkin_interview ?? false,
@@ -178,7 +194,10 @@ class JobPostController extends Controller
                 'interview_time' => $request->interview_time,
                 'not_email' => $request->not_email ?? false,
                 'viewed_number' => $request->viewed_number ?? false,
-                'is_verified' => false, // Default value
+                'is_verified' => false,
+                'industry' => $request->industry,
+                'department' => $request->department,
+                'job_role' => $request->job_role,
             ]);
 
             // Send job posting email
@@ -205,7 +224,9 @@ class JobPostController extends Controller
 
     public function getByEmployer($employerId): JsonResponse
 {
-    $jobs = JobPosting::where('employer_id', $employerId)->get();
+    $jobs = JobPosting::with(['company', 'employer'])
+        ->where('employer_id', $employerId)
+        ->get();
 
     return response()->json([
         'status' => 'success',

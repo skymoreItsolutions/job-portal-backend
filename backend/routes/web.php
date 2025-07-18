@@ -7,3 +7,8 @@ Route::get('/', function () {
 });
 
 
+
+use App\Http\Controllers\CandidateImportController;
+
+Route::get('/candidates/template', [CandidateImportController::class, 'downloadTemplate'])->name('candidatetemp.template');
+

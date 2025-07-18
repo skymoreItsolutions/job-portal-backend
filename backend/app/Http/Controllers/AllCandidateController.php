@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Mockery\Undefined;
 use Illuminate\Support\Facades\Auth;
+
 class AllCandidateController extends Controller
 {
     //
@@ -81,16 +82,16 @@ class AllCandidateController extends Controller
 }
 
 
- public function getCandidateinfo($token){
-$candidate=Candidate::whereToken($token)->first();
-$candidate->password="1234";
-if(!$candidate){
-return response()->json(["success"=>false]);
+    public function getCandidateinfo($token){
+       $candidate = Auth::guard('candidate-api')->user();
+   
+    if(!$candidate){
+    return response()->json(["success"=>false]);
 
-}
-return response()->json(["success"=>true,"candidate"=>$candidate]);
+    }
+    return response()->json(["success"=>true,"candidate"=>$candidate]);
 
- }
+    }
 
 
  public function loginbypasswod(Request $request){

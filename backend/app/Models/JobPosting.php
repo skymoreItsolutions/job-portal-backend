@@ -4,9 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Parallax\FilamentComments\Models\Traits\HasFilamentComments;
+
 class JobPosting extends Model
 {
-    use HasFactory;
+    use HasFactory,HasFilamentComments;
 
     protected $fillable = [
         'employer_id',
@@ -39,7 +41,13 @@ class JobPosting extends Model
     'interview_date', // Add for interviewDate
     'interview_time', // Add for interviewTime
     'not_email', // Add for notEmail
+    'industry', // Added
+        'department', // Added
+        'job_role', // Added
     'viewed_number', // Add for viewedNumber
+     'min_salary',
+        'max_salary',
+        'incentive',
         
     ];
 

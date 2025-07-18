@@ -3,7 +3,7 @@
 use App\Http\Controllers\AllCandidateController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-
+use App\Http\Controllers\API\JobDescriptionController;
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
@@ -47,7 +47,7 @@ Route::prefix('v1')->group(function () {
     Route::middleware('auth:sanctum')->get('employer/profile', [EmployerAuthController::class, 'profile']);
     Route::middleware('auth:employer-api')->post('job-posts', [JobPostController::class, 'store']);
 });
-
+Route::post('v1/generate-job-description', [JobDescriptionController::class, 'generateJobDescription']);
 Route::post("v1/createcandidate", [AllCandidateController::class, "CreateCandidate"]);
 
 Route::post("v1/updatecandidate/{token}",[AllCandidateController::class,"AddCandidateInfo"]);
