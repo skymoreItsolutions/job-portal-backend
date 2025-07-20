@@ -365,7 +365,7 @@ public function addCompany(Request $request)
             'contact_person' => 'nullable|string|max:255',
             'contact_phone' => 'nullable|string|max:20',
             'gst_certificate' => 'required|file|mimes:pdf|max:2048',
-            'company_pan_card' => 'required|file|mimes:pdf|max:2048',
+            'company_pan_card' => 'nullable|file|mimes:pdf|max:2048',
         ], [
             'gst_certificate.mimes' => 'The GST certificate must be a PDF file.',
             'company_pan_card.mimes' => 'The company PAN card must be a PDF file.',
