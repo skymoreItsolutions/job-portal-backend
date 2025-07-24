@@ -15,18 +15,20 @@ class JobDescriptionController extends Controller
         // Step 1: Validate input
         $validator = Validator::make($request->all(), [
             'jobTitle' => 'required|string|max:255',
-            'industry' => 'required|string|max:255',
+            'industry' => 'nullable|string|max:255',
             'department' => 'nullable|string|max:255',
             'requiredSkills.*' => 'nullable|string|max:255',
-            'experienceLevel' => 'required|string|max:50',
+            'experienceLevel' => 'nullable|string|max:50',
+            'totalExperienceRequired' => 'nullable|string|max:255',
             'experienceMax' => 'nullable|string|max:50',
             'educationLevel' => 'required|string|max:255',
             'course' => 'nullable|string|max:255',
             'specialization' => 'nullable|string|max:255',
-            'companyName' => 'required|string|max:255',
+            'companyName' => 'nullable|string|max:255',
+            'newCompanyName' => 'nullable|string|max:255',
             'contactEmail' => 'nullable|email|max:255',
             'contactPhone' => 'nullable|string|max:20',
-            'contactPreference' => 'nullable|array',
+            'contactPreference' => 'nullable',
             'englishLevel' => 'nullable|string|max:50',
             'genderPreference' => 'nullable|string|max:50',
             'gstCertificate' => 'nullable',
@@ -49,20 +51,21 @@ class JobDescriptionController extends Controller
 
         // Prepare prompt
         $formData = $request->all();
+        // Use newCompanyName if provided, otherwise fall back to companyName, or default to 'our company'
+        $company = $formData['newCompanyName'] ?? $formData['companyName'] ?? 'our company';
         $prompt = "
-            Write a professional job description for a {$formData['jobTitle']} position at {$formData['companyName']} in the {$formData['industry']} industry.
-            The job is in the " . ($formData['department'] ?? 'unspecified') . " department. 
-            The position is {$formData['jobType']} and requires {$formData['experienceLevel']}" . 
-            ($formData['experienceMax'] ? " to {$formData['experienceMax']} years of experience" : " years of experience") . 
-            " and a {$formData['educationLevel']} level of education" .
-            (isset($formData['course']) ? " in {$formData['course']}" . (isset($formData['specialization']) ? ", specializing in {$formData['specialization']}" : "") : "") .
-            (isset($formData['englishLevel']) ? ". Candidates should have {$formData['englishLevel']} English proficiency" : "") .
-            (isset($formData['interviewMode']) ? ". The interview will be conducted {$formData['interviewMode']}" : "") .
-            (isset($formData['contactEmail']) ? ". Contact email: {$formData['contactEmail']}" : "") .
-            ". Include a brief overview, key responsibilities, qualifications, and education and experience. 
-            Format the response with headings (Overview, Key Responsibilities, Qualifications, Education and Experience), 
-            use bullet points for responsibilities and qualifications, and use professional language. 
-        ";
+    Write a professional job description for a {$formData['jobTitle']} position at $company 
+    The position is {$formData['jobType']}" . 
+    ($formData['experienceMax'] ? " with up to {$formData['experienceMax']} years of experience" : "") . 
+    " and a {$formData['educationLevel']} level of education" .
+    (isset($formData['course']) ? " in {$formData['course']}" . (isset($formData['specialization']) ? ", specializing in {$formData['specialization']}" : "") : "") .
+    (isset($formData['englishLevel']) ? ". Candidates should have {$formData['englishLevel']} English proficiency" : "") .
+    (isset($formData['interviewMode']) ? ". The interview will be conducted {$formData['interviewMode']}" : "") .
+    (isset($formData['contactEmail']) ? ". Contact email: {$formData['contactEmail']}" : "") .
+    ". Include a brief overview, key responsibilities, qualifications, and education and experience. 
+    Format the response with headings (Overview, Key Responsibilities, Qualifications, Education and Experience), 
+    use bullet points for responsibilities and qualifications, and use professional language. 
+";
 
         try {
             $response = Http::withHeaders([

@@ -17,22 +17,22 @@ class JobPostController extends Controller
 {
     
 
- public function store(Request $request): JsonResponse
+   public function store(Request $request): JsonResponse
     {
         // Define validation rules
-      $rules = [
+        $rules = [
             'employer_id' => 'required|exists:employers,id',
             'company_id' => 'nullable|exists:companies,id',
             'company_name' => 'nullable|string|max:255',
             'pan_card' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
-            'gst_certificate' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
+
             'job_title' => 'required|string|max:255',
-            'job_type' => 'required|in:Full-Time,Part-Time,Freelance',
+            'job_type' => 'required|in:Full-Time,Part-Time,Freelance,Contract,Internship',
             'location' => 'required|string|max:255',
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
             'work_location_type' => 'required|in:Work from Home,Work from Office,Hybrid',
-            'compensation' => 'nullable|string|max:255', 
+            'compensation' => 'nullable|string|max:255',
             'min_salary' => 'required|numeric|min:0',
             'max_salary' => 'nullable|numeric|min:0|gte:min_salary',
             'incentive' => 'nullable|numeric|min:0',
@@ -41,9 +41,10 @@ class JobPostController extends Controller
             'additional_requirements' => 'nullable|json',
             'is_walkin_interview' => 'boolean',
             'joining_fee' => 'required|boolean',
-            'communication_preference' => 'required|in:Whatsapp,Call,No Preference',
-            'total_experience_required' => 'nullable|integer|min:0',
-            'total_experience_max' => 'nullable|integer|min:0|gte:total_experience_required',
+            'joining_fee_required' => 'string|in:Yes,No',
+            'communication_preference' => 'required',
+            'total_experience_required' => 'nullable',
+            'total_experience_max' => 'nullable|integer|min:0',
             'other_job_titles' => 'nullable|json',
             'degree_specialization' => 'nullable|json',
             'job_description' => 'nullable|string',
@@ -52,43 +53,44 @@ class JobPostController extends Controller
             'english_level' => 'nullable|in:Beginner,Intermediate,Advanced,Fluent',
             'gender_preference' => 'nullable|in:No Preference,Male,Female,Other',
             'perks' => 'nullable|json',
+            'preferred_roles' => 'nullable|json',
+            'key_responsibilities' => 'nullable|string',
+            'required_skills' => 'nullable|json',
             'interview_location' => 'nullable|string|max:255',
+            'interview_mode' => 'nullable|in:Online,In-Person,Hybrid',
             'contact_email' => 'nullable|email|max:255',
             'contact_phone' => 'nullable|string|max:20',
-            'interview_date' => 'nullable|date',
-            'interview_time' => 'nullable|string',
+            'interview_date' => 'nullable',
+           
             'not_email' => 'boolean',
             'viewed_number' => 'boolean',
-            'industry' => 'required|string',
-            'department' => 'required|string',
+            'industry' => 'nullable|string|max:255',
+            'department' => 'nullable|string|max:255',
             'job_role' => 'required|string|max:255',
         ];
 
-
         // Custom validation messages
-         $messages = [
-            'gst_certificate.mimes' => 'The GST certificate must be a PDF, JPG, JPEG, or PNG file.',
+        $messages = [
+       
             'pan_card.mimes' => 'The PAN card must be a PDF, JPG, JPEG, or PNG file.',
-            'industry.required' => 'The industry field is required.',
-            'department.required' => 'The department field is required.',
+           
             'job_role.required' => 'The job role field is required.',
             'min_salary.required' => 'The minimum salary is required.',
             'max_salary.gte' => 'The maximum salary must be greater than or equal to the minimum salary.',
             'incentive.numeric' => 'The incentive must be a valid number.',
+            'total_experience_required.in' => 'Total experience must be one of: Any, Fresher, 1-3 years, 3-5 years, 5+ years.',
+            'joining_fee_required.in' => 'Joining fee required must be either Yes or No.',
         ];
 
         // Validate the request
         $validator = Validator::make($request->all(), $rules, $messages);
 
         // Custom validation for company_id or newCompanyName
-        if (!$request->company_id && !$request->newCompanyName) {
-            $validator->errors()->add('company_id', 'Either company_id or newCompanyName is required.');
+        if (!$request->company_id && !$request->company_name) {
+            $validator->errors()->add('company_id', 'Either company_id or company_name is required.');
         }
 
-        if ($request->newCompanyName && (!$request->hasFile('pan_card') || !$request->hasFile('gst_certificate'))) {
-            $validator->errors()->add('newCompanyName', 'PAN card and GST certificate are required when adding a new company.');
-        }
-
+    
         if ($validator->fails()) {
             return response()->json([
                 'status' => 'error',
@@ -98,27 +100,33 @@ class JobPostController extends Controller
         }
 
         try {
-           
             $employer = Auth::guard('employer-api')->user();
-            
+
             if (!$employer) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => $employer,
+                    'message' => 'Unauthorized',
                 ], 401);
+            }
+
+            // Check if employer has at least 50 credits
+            $minimumCreditsRequired = 1;
+            if (!$employer->hasEnoughCredits($minimumCreditsRequired)) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Insufficient credits. Minimum 1 credit required to post a job.',
+                    'current_credits' => $employer->credits,
+                ], 403);
             }
 
             // Handle company creation
             $company_id = $request->company_id;
-            if ($request->newCompanyName) {
+            if ($request->company_name) {
                 // Handle file uploads with unique filenames
                 $gstCertificatePath = null;
                 $otherCertificatePath = null;
 
-                if ($request->hasFile('gst_certificate') && $request->file('gst_certificate')->isValid()) {
-                    $filename = 'gst_' . time() . '_' . $request->file('gst_certificate')->getClientOriginalName();
-                    $gstCertificatePath = $request->file('gst_certificate')->storeAs('documents', $filename, 'public');
-                }
+             
 
                 if ($request->hasFile('pan_card') && $request->file('pan_card')->isValid()) {
                     $filename = 'pan_' . time() . '_' . $request->file('pan_card')->getClientOriginalName();
@@ -128,21 +136,14 @@ class JobPostController extends Controller
                 // Create the company
                 $company = Company::create([
                     'employer_id' => $employer->id,
-                    'name' => $request->newCompanyName,
+                    'name' => $request->company_name,
                     'company_location' => $request->location,
                     'contact_person' => null,
                     'contact_phone' => $request->contact_phone,
-                    'gst_certificate' => $gstCertificatePath,
+   
                     'other_certificate' => $otherCertificatePath,
                     'is_approved' => false,
                 ]);
-
-                // Notify admin about new company registration
-                try {
-                    Mail::to('manshu.developer@gmail.com')->send(new NewCompanyRegistered($employer, $company));
-                } catch (\Exception $e) {
-                    Log::error('Failed to send company registration email: ' . $e->getMessage());
-                }
 
                 $company_id = $company->id;
             } else {
@@ -152,15 +153,23 @@ class JobPostController extends Controller
                     return response()->json([
                         'status' => 'error',
                         'message' => 'Invalid or unauthorized company.',
-                         'check' => $request->company_id,
+                        'check' =>  $request->company_name,
                     ], 422);
                 }
                 $company_id = $company->id;
             }
 
+
+                  $interview_date = $request->interview_date;
+      
+
+        $interview_date = ($interview_date === 'null' || $interview_date === '') ? null : $interview_date;
+
+
+
             // Create the job post
-            $JobPosting = JobPosting::create([
-               'employer_id' => $request->employer_id,
+            $jobPosting = JobPosting::create([
+                'employer_id' => $employer->id,
                 'company_id' => $company_id,
                 'job_title' => $request->job_title,
                 'job_type' => $request->job_type,
@@ -168,7 +177,7 @@ class JobPostController extends Controller
                 'latitude' => $request->latitude,
                 'longitude' => $request->longitude,
                 'work_location_type' => $request->work_location_type,
-                'compensation' => $request->compensation, // Optional: Keep for backward compatibility
+                'compensation' => $request->compensation,
                 'min_salary' => $request->min_salary,
                 'max_salary' => $request->max_salary,
                 'incentive' => $request->incentive,
@@ -176,6 +185,8 @@ class JobPostController extends Controller
                 'basic_requirements' => $request->basic_requirements,
                 'additional_requirements' => $request->additional_requirements,
                 'is_walkin_interview' => $request->is_walkin_interview ?? false,
+                'joining_fee' => $request->joining_fee,
+                'joining_fee_required' => $request->joining_fee_required,
                 'communication_preference' => $request->communication_preference,
                 'total_experience_required' => $request->total_experience_required,
                 'total_experience_max' => $request->total_experience_max,
@@ -187,11 +198,15 @@ class JobPostController extends Controller
                 'english_level' => $request->english_level,
                 'gender_preference' => $request->gender_preference,
                 'perks' => $request->perks,
+                'preferred_roles' => $request->preferred_roles,
+                'key_responsibilities' => $request->key_responsibilities,
+                'required_skills' => $request->required_skills,
                 'interview_location' => $request->interview_location,
+                'interview_mode' => $request->interview_mode,
                 'contact_email' => $request->contact_email,
                 'contact_phone' => $request->contact_phone,
                 'interview_date' => $request->interview_date,
-                'interview_time' => $request->interview_time,
+
                 'not_email' => $request->not_email ?? false,
                 'viewed_number' => $request->viewed_number ?? false,
                 'is_verified' => false,
@@ -200,9 +215,12 @@ class JobPostController extends Controller
                 'job_role' => $request->job_role,
             ]);
 
+            // Deduct 1 credit for the job posting
+            $employer->deductCredits(1);
+
             // Send job posting email
             try {
-             //   Mail::to('manshu.developer@gmail.com')->send(new JobPostingMail($JobPosting));
+                // Mail::to('manshu.developer@gmail.com')->send(new JobPostingMail($jobPosting));
             } catch (\Exception $e) {
                 Log::error('Failed to send job posting email: ' . $e->getMessage());
             }
@@ -210,7 +228,8 @@ class JobPostController extends Controller
             return response()->json([
                 'status' => 'success',
                 'message' => 'Job post created successfully',
-                'data' => $JobPosting,
+                'data' => $jobPosting,
+                'remaining_credits' => $employer->credits,
             ], 201);
         } catch (\Exception $e) {
             return response()->json([

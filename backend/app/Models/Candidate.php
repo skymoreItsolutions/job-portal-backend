@@ -40,7 +40,8 @@ class Candidate extends Model
         'otp_expires_at',
         "password",
         "doneprofile",
-        "skills"
+        "skills",
+        'experience_type'
     ];
 
   protected $casts = [
@@ -65,5 +66,11 @@ class Candidate extends Model
     public function languages()
     {
         return $this->hasMany(CandidateLanguage::class);
+    }
+    public function employerViews()
+    {
+        return $this->belongsToMany(Employer::class, 'employer_candidate_views')
+                    ->withPivot('number_revealed', 'revealed_at')
+                    ->withTimestamps();
     }
 }

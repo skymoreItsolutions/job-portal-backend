@@ -4,9 +4,6 @@ use App\Http\Controllers\AllCandidateController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\JobDescriptionController;
-Route::get('/user', function (Request $request) {
-    return $request->user();
-})->middleware('auth:sanctum');
 
 use App\Http\Controllers\API\CandidateController;
 use App\Http\Controllers\API\CandidateLanguageController;
@@ -16,8 +13,16 @@ use App\Http\Controllers\API\CandidateSkillController;
 
 use App\Http\Controllers\API\AuthController;
 
-use App\Http\Controllers\Api\JobPostController;
+use App\Http\Controllers\API\JobPostController;
 use App\Http\Controllers\API\EmployerAuthController;
+use App\Http\Controllers\API\JobTitleController;
+
+
+
+Route::get('/user', function (Request $request) {
+    return $request->user();
+})->middleware('auth:sanctum');
+
 
 
 Route::prefix('v1')->group(function () {
@@ -29,13 +34,14 @@ Route::prefix('v1')->group(function () {
     Route::apiResource('candidate/exp', CandidateExperienceController::class);
     Route::apiResource('candidate/edu', CandidateEducationController::class);
     Route::get('/filter', [CandidateController::class, 'filter']);
+      Route::post('/reveal-number', [CandidateController::class, 'revealNumber']);
     Route::post('signup', [AuthController::class, 'signup']);
     Route::post('send-otp', [AuthController::class, 'sendOtp']);
     Route::post('verify-otp', [AuthController::class, 'verifyOtp']);
     Route::post('employer/signup', [EmployerAuthController::class, 'signup']);
     Route::post('employer/send-otp', [EmployerAuthController::class, 'sendOtp']);
 
-
+     Route::get('/job-titles/search', [JobTitleController::class, 'search']);
     Route::post('employer/verify-otp', [EmployerAuthController::class, 'verifyOtp']);
     Route::post('employer/login', [EmployerAuthController::class, 'login']);
     Route::get('/jobs/employer/{id}', [JobPostController::class, 'getByEmployer']);
