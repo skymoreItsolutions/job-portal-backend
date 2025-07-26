@@ -52,6 +52,15 @@ Route::prefix('v1')->group(function () {
     Route::middleware('auth:sanctum')->post('employer/update', [EmployerAuthController::class, 'updateEmployer']);
     Route::middleware('auth:sanctum')->get('employer/profile', [EmployerAuthController::class, 'profile']);
     Route::middleware('auth:employer-api')->post('job-posts', [JobPostController::class, 'store']);
+
+
+    Route::put('/jobs/{jobId}/refresh', [JobPostController::class, 'refreshJob']);
+
+
+    Route::put('/jobs/{jobId}', [JobPostController::class, 'update']);
+
+
+    Route::delete('/jobs/{jobId}', [JobPostController::class, 'destroy']);
 });
 Route::post('v1/generate-job-description', [JobDescriptionController::class, 'generateJobDescription']);
 Route::post("v1/createcandidate", [AllCandidateController::class, "CreateCandidate"]);

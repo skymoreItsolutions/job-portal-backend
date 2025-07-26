@@ -142,6 +142,7 @@ class CandidateController extends Controller
             'shift_preference' => 'nullable|string|in:day,night',
             'page'           => 'nullable|integer|min:1',
             'per_page'       => 'nullable|integer|min:1|max:100',
+            'number_revealed' => 'nullable|boolean',
         ]);
 
         if ($validator->fails()) {
@@ -161,6 +162,21 @@ class CandidateController extends Controller
                 $query->whereNull('resume');
             }
         }
+
+
+        if ($request->filled('number_revealed')) {
+        $employer = Auth::guard('employer-api')->user();
+        if ($employer) {
+            $query->whereHas('employerViews', function ($q) use ($employer, $request) {
+                $q->where('employer_id', $employer->id)
+                  ->where('number_revealed', $request->input('number_revealed'));
+            });
+        } else {
+            // If no employer is authenticated, return no results for number_revealed filter
+            $query->whereRaw('1 = 0');
+        }
+    }
+    
 
         if ($minExperience = $request->input('min_experience')) {
             $query->whereRaw('(experience_years * 12 + experience_months) >= ?', [(int)$minExperience * 12]);
