@@ -58,9 +58,9 @@ class JobPostController extends Controller
             'required_skills' => 'nullable|json',
             'interview_location' => 'nullable|string|max:255',
             'interview_mode' => 'nullable|in:Online,In-Person,Hybrid',
-            'contact_email' => 'nullable|email|max:255',
+            'contact_email' => 'nullable|max:255',
             'contact_phone' => 'nullable|string|max:20',
-            // 'interview_date' => 'nullable',
+
            
             'not_email' => 'boolean',
             'viewed_number' => 'boolean',
@@ -160,11 +160,6 @@ class JobPostController extends Controller
             }
 
 
-                  $interview_date = $request->interview_date;
-      
-
-        $interview_date = ($interview_date === 'null' || $interview_date === '') ? null : $interview_date;
-
 
 
             // Create the job post
@@ -205,7 +200,7 @@ class JobPostController extends Controller
                 'interview_mode' => $request->interview_mode,
                 'contact_email' => $request->contact_email,
                 'contact_phone' => $request->contact_phone,
-                'interview_date' => $request->interview_date,
+      
 
                 'not_email' => $request->not_email ?? false,
                 'viewed_number' => $request->viewed_number ?? false,
@@ -404,7 +399,7 @@ class JobPostController extends Controller
             'interview_mode' => 'nullable|in:Online,In-Person,Hybrid',
             'contact_email' => 'nullable|email|max:255',
             'contact_phone' => 'nullable|string|max:20',
-            'interview_date' => 'nullable',
+
             'not_email' => 'boolean',
             'viewed_number' => 'boolean',
             'industry' => 'nullable|string|max:255',
@@ -498,8 +493,7 @@ class JobPostController extends Controller
                 $company_id = $company->id;
             }
 
-            $interview_date = ($request->interview_date === 'null' || $request->interview_date === '') ? null : $request->interview_date;
-
+        
             // Update the job post
             $jobPosting->update([
                 'company_id' => $company_id,
@@ -537,7 +531,7 @@ class JobPostController extends Controller
                 'interview_mode' => $request->interview_mode,
                 'contact_email' => $request->contact_email,
                 'contact_phone' => $request->contact_phone,
-                'interview_date' => $interview_date,
+      
                 'not_email' => $request->not_email ?? false,
                 'viewed_number' => $request->viewed_number ?? false,
                 'industry' => $request->industry,

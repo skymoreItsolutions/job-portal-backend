@@ -17,7 +17,7 @@ use App\Http\Controllers\API\JobPostController;
 use App\Http\Controllers\API\EmployerAuthController;
 use App\Http\Controllers\API\JobTitleController;
 
-
+use App\Http\Controllers\API\CitiesController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -61,6 +61,31 @@ Route::prefix('v1')->group(function () {
 
 
     Route::delete('/jobs/{jobId}', [JobPostController::class, 'destroy']);
+
+
+    
+});
+
+Route::prefix('v1/cities')->group(function () {
+   Route::get('/', [CitiesController::class, 'index']);
+    // Route::get('/{id}', [CitiesController::class, 'show']);
+    Route::post('/', [CitiesController::class, 'store']);
+    Route::put('/{id}', [CitiesController::class, 'update']);
+    Route::delete('/{id}', [CitiesController::class, 'destroy']);
+
+    Route::get('/search', [CitiesController::class, 'search']);
+
+        Route::get('/{cityId}/locations', [CitiesController::class, 'searchLocations']);
+});
+
+Route::prefix('v1/qualifications')->group(function () {
+    Route::get('/', [QualificationsController::class, 'index']);
+    Route::get('/{id}', [QualificationsController::class, 'show']);
+    Route::post('/', [QualificationsController::class, 'store']);
+    Route::put('/{id}', [QualificationsController::class, 'update']);
+    Route::delete('/{id}', [QualificationsController::class, 'destroy']);
+    Route::get('/search', [QualificationsController::class, 'search']);
+    Route::get('/{qualificationId}/specializations', [QualificationsController::class, 'specializations']);
 });
 Route::post('v1/generate-job-description', [JobDescriptionController::class, 'generateJobDescription']);
 Route::post("v1/createcandidate", [AllCandidateController::class, "CreateCandidate"]);

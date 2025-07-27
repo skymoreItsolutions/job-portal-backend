@@ -502,7 +502,7 @@ public function addCompany(Request $request)
     return response()->json([
         'success' => true,
         'message' => 'Login successful',
-        'token' => $token,
+        'session_token' => $token,
         'employer' => [
             'id' => $employer->id,
             'name' => $employer->name,
