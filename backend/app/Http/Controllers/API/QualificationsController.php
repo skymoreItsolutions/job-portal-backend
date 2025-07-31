@@ -65,6 +65,37 @@ class QualificationsController extends Controller
         ], 201);
     }
 
+     public function getByEducationLevel($level): JsonResponse
+    {
+        // Validate the education_level parameter
+        $validator = Validator::make(['education_level' => $level], [
+            'education_level' => 'required|integer|min:0',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $validator->errors()
+            ], 422);
+        }
+
+        // Fetch qualifications with the specified education_level
+        $qualifications = Qualification::where('education_level', $level)->get();
+
+        if ($qualifications->isEmpty()) {
+            return response()->json([
+                'status' => 'success',
+                'message' => 'No qualifications found for the specified education level',
+                'data' => []
+            ], 200);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $qualifications
+        ], 200);
+    }
+
     // Update qualification
     public function update(Request $request, $id): JsonResponse
     {
@@ -143,25 +174,26 @@ class QualificationsController extends Controller
     }
 
     // Get specializations by qualification ID
-    public function specializations($qualificationId): JsonResponse
-    {
-        $qualification = Qualification::find($qualificationId);
-        
-        if (!$qualification) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Qualification not found'
-            ], 404);
-        }
+ public function specializations($qualificationId): JsonResponse
+{
+    $qualification = Qualification::find($qualificationId);
 
-        $specializations = Specialization::where('cohort_id', $qualification->cohort_id)->get();
-        
+    if (!$qualification) {
         return response()->json([
-            'status' => 'success',
-            'data' => [
-                'qualification' => $qualification,
-                'specializations' => $specializations
-            ]
-        ], 200);
+            'status' => 'error',
+            'message' => 'Qualification not found'
+        ], 404);
     }
+
+    $specializations = Specialization::where('course_id', $qualification->id)->get();
+
+    return response()->json([
+        'status' => 'success',
+        'data' => [
+            'qualification' => $qualification,
+            'specializations' => $specializations,
+        ],
+    ], 200);
+}
+
 }

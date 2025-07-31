@@ -18,6 +18,9 @@ use App\Http\Controllers\API\EmployerAuthController;
 use App\Http\Controllers\API\JobTitleController;
 
 use App\Http\Controllers\API\CitiesController;
+use App\Http\Controllers\API\QualificationsController;
+
+
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -80,8 +83,10 @@ Route::prefix('v1/cities')->group(function () {
 
 Route::prefix('v1/qualifications')->group(function () {
     Route::get('/', [QualificationsController::class, 'index']);
-    Route::get('/{id}', [QualificationsController::class, 'show']);
+    // Route::get('/{id}', [QualificationsController::class, 'show']);
     Route::post('/', [QualificationsController::class, 'store']);
+  Route::get('/education-level/{level}', [QualificationsController::class, 'getByEducationLevel']);
+
     Route::put('/{id}', [QualificationsController::class, 'update']);
     Route::delete('/{id}', [QualificationsController::class, 'destroy']);
     Route::get('/search', [QualificationsController::class, 'search']);
