@@ -14,20 +14,66 @@ class AllCandidateController extends Controller
     //
 
 
+
+    public function index()
+    {
+        $candidates = Candidate::all();
+        return response()->json($candidates);
+    }
+
     public function AddCandidateInfo(Request $request, $token) {
     // Find the candidate by token
-     $candidate = Auth::guard('candidate-api')->user();
-
-
-
+    $candidate = Auth::guard('candidate-api')->user();
 
     // Check if candidate exists
     if (!$candidate) {
         return response()->json([
             "success" => false,
-            "message" => $candidate
+            "message" => "Candidate not found"
         ], 404);
     }
+
+    // Validate the request
+    $validated = $request->validate([
+        'full_name' => 'sometimes|string|max:255',
+        'number' => 'sometimes|string|max:20',
+        'dob' => 'sometimes|date',
+        'gender' => 'sometimes|string|in:Male,Female,Other',
+        'email' => 'sometimes|email|max:255',
+        'address' => 'sometimes|string|nullable',
+        'city' => 'sometimes|string|nullable',
+        'state' => 'sometimes|string|nullable',
+        'degree' => 'sometimes|string|nullable',
+        'specialization' => 'sometimes|string|nullable',
+        'college_name' => 'sometimes|string|nullable',
+        'passing_marks' => 'sometimes|numeric|nullable',
+        'pursuing' => 'sometimes|boolean|nullable',
+        'experience_years' => 'sometimes|integer|nullable',
+        'experience_months' => 'sometimes|integer|nullable',
+        'job_title' => 'sometimes|string|nullable',
+        'job_roles' => 'sometimes|string|nullable',
+        'company_name' => 'sometimes|string|nullable',
+        'current_salary' => 'sometimes|numeric|nullable',
+        // 'start_year' => 'sometimes|integer|digits:4|nullable',
+        // 'start_month' => 'sometimes|string|max:20|nullable',
+        'prefers_night_shift' => 'sometimes|boolean',
+        'prefers_day_shift' => 'sometimes|boolean',
+        'work_from_home' => 'sometimes|boolean',
+        'work_from_office' => 'sometimes|boolean',
+        'skills' => 'sometimes|array|nullable',
+        'preferred_language' => 'sometimes|string|nullable',
+        'password' => 'sometimes|string|min:8',
+        'education_level' => 'sometimes|string|nullable',
+        'currently_pursuing' => 'sometimes|string|nullable',
+        'highest_education' => 'sometimes|string|nullable',
+        'complete_years' => 'sometimes|integer|nullable',
+        'complete_month' => 'sometimes|string|nullable',
+        'school_medium' => 'sometimes|string|nullable',
+        'experience_level' => 'sometimes|string|nullable',
+        'is_working' => 'sometimes|string|nullable',
+        'notice_period' => 'sometimes|string|nullable',
+        'preferred_job_titles' => 'sometimes|string|nullable',
+    ]);
 
     // Update candidate properties
     $candidate->full_name = $request->full_name ?? $candidate->full_name;
@@ -49,13 +95,24 @@ class AllCandidateController extends Controller
     $candidate->job_roles = $request->job_roles ?? $candidate->job_roles;
     $candidate->company_name = $request->company_name ?? $candidate->company_name;
     $candidate->current_salary = $request->current_salary ?? $candidate->current_salary;
-    $candidate->start_date = $request->start_date ?? $candidate->start_date;
+    // $candidate->start_year = $request->start_year ?? $candidate->start_year;
+    // $candidate->start_month = $request->start_month ?? $candidate->start_month;
     $candidate->prefers_night_shift = $request->prefers_night_shift ?? $candidate->prefers_night_shift;
     $candidate->prefers_day_shift = $request->prefers_day_shift ?? $candidate->prefers_day_shift;
     $candidate->work_from_home = $request->work_from_home ?? $candidate->work_from_home;
     $candidate->work_from_office = $request->work_from_office ?? $candidate->work_from_office;
-    $candidate->skills = $request->skills ?? $candidate->skills;
+    $candidate->skills = is_array($request->skills) ? json_encode($request->skills) : $candidate->skills;
     $candidate->preferred_language = $request->preferred_language ?? $candidate->preferred_language;
+    $candidate->education_level = $request->education_level ?? $candidate->education_level;
+    $candidate->currently_pursuing = $request->currently_pursuing ?? $candidate->currently_pursuing;
+    $candidate->highest_education = $request->highest_education ?? $candidate->highest_education;
+    $candidate->complete_years = $request->complete_years ?? $candidate->complete_years;
+    $candidate->complete_month = $request->complete_month ?? $candidate->complete_month;
+    $candidate->school_medium = $request->school_medium ?? $candidate->school_medium;
+    $candidate->experience_level = $request->experience_level ?? $candidate->experience_level;
+    $candidate->is_working = $request->is_working ?? $candidate->is_working;
+    $candidate->notice_period = $request->notice_period ?? $candidate->notice_period;
+    $candidate->preferred_job_titles = is_array($request->preferred_job_titles) ? json_encode($request->preferred_job_titles) : $candidate->preferred_job_titles;
     $candidate->password = $request->password ? Hash::make($request->password) : $candidate->password;
     $candidate->doneprofile = 1;
 
@@ -80,6 +137,9 @@ class AllCandidateController extends Controller
         "path" => $path
     ]);
 }
+
+ 
+
 
 
     public function getCandidateinfo($token){

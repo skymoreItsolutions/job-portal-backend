@@ -142,73 +142,106 @@ class CandidateResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->columns([
-                TextColumn::make('full_name')
-                    ->searchable()
-                    ->sortable()
-                    ->icon('heroicon-o-user'),
-                TextColumn::make('email')
-                    ->searchable(),
-                BadgeColumn::make('gender')
-                    ->colors([
-                        'primary' => 'male',
-                        'success' => 'female',
-                        'warning' => 'other',
-                    ]),
-                TextColumn::make('city')
-                    ->searchable(),
-                TextColumn::make('state')
-                    ->searchable(),
-                IconColumn::make('prefers_night_shift')
-                    ->boolean()
-                    ->label('Night Shift')
-                    ->trueIcon('heroicon-o-moon')
-                    ->falseIcon('heroicon-o-x-circle'),
-                IconColumn::make('prefers_day_shift')
-                    ->boolean()
-                    ->label('Day Shift')
-                    ->trueIcon('heroicon-o-sun')
-                    ->falseIcon('heroicon-o-x-circle'),
-                IconColumn::make('work_from_home')
-                    ->boolean()
-                    ->label('WFH')
-                    ->trueIcon('heroicon-o-home')
-                    ->falseIcon('heroicon-o-x-circle'),
-                IconColumn::make('work_from_office')
-                    ->boolean()
-                    ->label('Office')
-                    ->trueIcon('heroicon-o-building-office')
-                    ->falseIcon('heroicon-o-x-circle'),
-                IconColumn::make('field_job')
-                    ->boolean()
-                    ->label('Field Job')
-                    ->trueIcon('heroicon-o-briefcase')
-                    ->falseIcon('heroicon-o-x-circle'),
-                TextColumn::make('employment_type')
-                    ->label('Employment Type'),
-                TextColumn::make('skills')
-                    ->formatStateUsing(fn ($state) => is_array($state) ? implode(', ', $state) : $state)
-                    ->limit(25),
-                TextColumn::make('total_jobs_applied')
-                    ->label('Applied')
-                    ->sortable(),
-                TextColumn::make('total_job_views')
-                    ->label('Views')
-                    ->sortable(),
-                IconColumn::make('active_user')
-                    ->boolean()
-                    ->label('Active')
-                    ->trueIcon('heroicon-o-check-circle')
-                    ->falseIcon('heroicon-o-x-circle'),
-                IconColumn::make('doneprofile')
-                    ->boolean()
-                    ->label('Profile Done')
-                    ->trueIcon('heroicon-o-check-badge')
-                    ->falseIcon('heroicon-o-x-circle'),
-                TextColumn::make('last_login')
-                    ->dateTime()
-                    ->sortable(),
-            ])
+            ->columns(
+                [
+    TextColumn::make('full_name')
+        ->searchable()
+        ->sortable()
+        ->icon('heroicon-o-user'),
+    TextColumn::make('email')
+        ->searchable(),
+    BadgeColumn::make('gender')
+        ->colors([
+            'primary' => 'male',
+            'success' => 'female',
+            'warning' => 'other',
+        ]),
+    TextColumn::make('city')
+        ->searchable(),
+    TextColumn::make('state')
+        ->searchable(),
+    TextColumn::make('dob')
+        ->label('Date of Birth')
+        ->date()
+        ->sortable(),
+    TextColumn::make('education_level')
+        ->searchable()
+        ->label('Degree'),
+    TextColumn::make('specialization')
+        ->searchable()
+        ->label('Specialization'),
+    BadgeColumn::make('experience_level')
+        ->label('Experience')
+        ->colors([
+            'success' => 'Fresher',
+            'primary' => 'Mid-level',
+            'warning' => 'Senior',
+            'secondary' => fn ($state) => !in_array($state, ['Fresher', 'Mid-level', 'Senior']),
+        ]),
+    TextColumn::make('highest_education')
+        ->label('Highest Education')
+        ->searchable(),
+    TextColumn::make('complete_years')
+        ->label('Graduation Year')
+        ->sortable(),
+    TextColumn::make('number')
+        ->label('Phone Number')
+        ->searchable(),
+    IconColumn::make('prefers_night_shift')
+        ->boolean()
+        ->label('Night Shift')
+        ->trueIcon('heroicon-o-moon')
+        ->falseIcon('heroicon-o-x-circle'),
+    IconColumn::make('prefers_day_shift')
+        ->boolean()
+        ->label('Day Shift')
+        ->trueIcon('heroicon-o-sun')
+        ->falseIcon('heroicon-o-x-circle'),
+    IconColumn::make('work_from_home')
+        ->boolean()
+        ->label('WFH')
+        ->trueIcon('heroicon-o-home')
+        ->falseIcon('heroicon-o-x-circle'),
+    IconColumn::make('work_from_office')
+        ->boolean()
+        ->label('Office')
+        ->trueIcon('heroicon-o-building-office')
+        ->falseIcon('heroicon-o-x-circle'),
+    IconColumn::make('field_job')
+        ->boolean()
+        ->label('Field Job')
+        ->trueIcon('heroicon-o-briefcase')
+        ->falseIcon('heroicon-o-x-circle'),
+    TextColumn::make('employment_type')
+        ->label('Employment Type'),
+    TextColumn::make('skills')
+        ->formatStateUsing(fn ($state) => is_array($state) ? implode(', ', $state) : $state)
+        ->limit(25),
+    TextColumn::make('total_jobs_applied')
+        ->label('Applied')
+        ->sortable(),
+    TextColumn::make('total_job_views')
+        ->label('Views')
+        ->sortable(),
+    IconColumn::make('active_user')
+        ->boolean()
+        ->label('Active')
+        ->trueIcon('heroicon-o-check-circle')
+        ->falseIcon('heroicon-o-x-circle'),
+    IconColumn::make('doneprofile')
+        ->boolean()
+        ->label('Profile Done')
+        ->trueIcon('heroicon-o-check-badge')
+        ->falseIcon('heroicon-o-x-circle'),
+    TextColumn::make('last_login')
+        ->dateTime()
+        ->sortable(),
+    TextColumn::make('created_at')
+        ->label('Profile Created')
+        ->dateTime()
+        ->sortable(),
+]
+            )
             ->headerActions([
                 Action::make('import')
     ->label('Import Candidates')
