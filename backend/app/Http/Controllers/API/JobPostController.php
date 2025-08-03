@@ -29,8 +29,7 @@ class JobPostController extends Controller
             'job_title' => 'required|string|max:255',
             'job_type' => 'required|in:Full-Time,Part-Time,Freelance,Contract,Internship',
             'location' => 'required|string|max:255',
-            'latitude' => 'nullable|numeric',
-            'longitude' => 'nullable|numeric',
+         
             'work_location_type' => 'required|in:Work from Home,Work from Office,Hybrid',
             'compensation' => 'nullable|string|max:255',
             'min_salary' => 'required|numeric|min:0',
@@ -169,8 +168,7 @@ class JobPostController extends Controller
                 'job_title' => $request->job_title,
                 'job_type' => $request->job_type,
                 'location' => $request->location,
-                'latitude' => $request->latitude,
-                'longitude' => $request->longitude,
+              
                 'work_location_type' => $request->work_location_type,
                 'compensation' => $request->compensation,
                 'min_salary' => $request->min_salary,
@@ -368,8 +366,7 @@ class JobPostController extends Controller
             'job_title' => 'required|string|max:255',
             'job_type' => 'required|in:Full-Time,Part-Time,Freelance,Contract,Internship',
             'location' => 'required|string|max:255',
-            'latitude' => 'nullable|numeric',
-            'longitude' => 'nullable|numeric',
+
             'work_location_type' => 'required|in:Work from Home,Work from Office,Hybrid',
             'compensation' => 'nullable|string|max:255',
             'min_salary' => 'required|numeric|min:0',
@@ -500,8 +497,7 @@ class JobPostController extends Controller
                 'job_title' => $request->job_title,
                 'job_type' => $request->job_type,
                 'location' => $request->location,
-                'latitude' => $request->latitude,
-                'longitude' => $request->longitude,
+            
                 'work_location_type' => $request->work_location_type,
                 'compensation' => $request->compensation,
                 'min_salary' => $request->min_salary,
