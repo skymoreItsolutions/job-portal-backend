@@ -54,17 +54,15 @@ class JobDescriptionController extends Controller
         // Use newCompanyName if provided, otherwise fall back to companyName, or default to 'our company'
         $company = $formData['newCompanyName'] ?? $formData['companyName'] ?? 'our company';
         $prompt = "
-    Write a professional job description for a {$formData['jobTitle']} position at $company 
-    The position is {$formData['jobType']}" . 
-    ($formData['experienceMax'] ? " with up to {$formData['experienceMax']} years of experience" : "") . 
-    " and a {$formData['educationLevel']} level of education" .
-    (isset($formData['course']) ? " in {$formData['course']}" . (isset($formData['specialization']) ? ", specializing in {$formData['specialization']}" : "") : "") .
-    (isset($formData['englishLevel']) ? ". Candidates should have {$formData['englishLevel']} English proficiency" : "") .
-    (isset($formData['interviewMode']) ? ". The interview will be conducted {$formData['interviewMode']}" : "") .
-    (isset($formData['contactEmail']) ? ". Contact email: {$formData['contactEmail']}" : "") .
-    ". Include a brief overview, key responsibilities, qualifications, and education and experience. 
-    Format the response with headings (Overview, Key Responsibilities, Qualifications, Education and Experience), 
-    use bullet points for responsibilities and qualifications, and use professional language. 
+        Write a professional job description for a {$formData['jobTitle']} position at $company 
+        The position is {$formData['jobType']}" . 
+        ($formData['experienceMax'] ? " with up to {$formData['experienceMax']} years of experience" : "") . 
+        " and a {$formData['educationLevel']} level of education" .
+        (isset($formData['course']) ? " in {$formData['course']}" . (isset($formData['specialization']) ? ", specializing in {$formData['specialization']}" : "") : "") .
+        (isset($formData['englishLevel']) ? ". Candidates should have {$formData['englishLevel']} English proficiency" : "") .
+        (isset($formData['interviewMode']) ? ". The interview will be conducted {$formData['interviewMode']}" : "") .
+        (isset($formData['contactEmail']) ? ". Contact email: {$formData['contactEmail']}" : "") .
+        ". 
 ";
 
         try {
