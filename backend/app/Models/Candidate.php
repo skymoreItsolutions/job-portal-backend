@@ -10,37 +10,67 @@ use App\Models\CandidateSkill;
 use App\Models\CandidateLanguage;
 
 
-
+use Laravel\Sanctum\HasApiTokens;
 class Candidate extends Model
 {
-    use HasFactory;
 
+       use HasFactory,HasApiTokens;
     protected $table = 'candidates';
 
     protected $fillable = [
-        'full_name',
+ 'full_name',
         'dob',
         'gender',
         'email',
         'address',
         'city',
         'state',
+        'degree',
+        'specialization',
+        'college_name',
+        'education_level',
+        'currently_pursuing',
+        'highest_education',
+        'complete_years',
+        'complete_month',
+        'school_medium',
+        'passing_marks',
+        'pursuing',
+        'experience_years',
+        'experience_months',
+        'experience_level',
+        'is_working',
+        'notice_period',
+        'job_title',
+        'job_roles',
+        'preferred_job_titles',
+        'company_name',
+        'current_salary',
         'prefers_night_shift',
         'prefers_day_shift',
         'work_from_home',
         'work_from_office',
         'field_job',
+        'experience_type',
         'employment_type',
+        'preferred_language',
         'resume',
+        'skills',
         'active_user',
         'last_login',
         'total_jobs_applied',
         'total_job_views',
+        'created_at',
+        'updated_at',
         'otp',
         'otp_expires_at',
-        "password",
-        "doneprofile",
-        "skills"
+        'number',
+        'token',
+        'password',
+        'doneprofile',
+        'start_date',
+        'end_date',
+        'english_level',
     ];
 
   protected $casts = [
@@ -65,5 +95,11 @@ class Candidate extends Model
     public function languages()
     {
         return $this->hasMany(CandidateLanguage::class);
+    }
+    public function employerViews()
+    {
+        return $this->belongsToMany(Employer::class, 'employer_candidate_views')
+                    ->withPivot('number_revealed', 'revealed_at')
+                    ->withTimestamps();
     }
 }
